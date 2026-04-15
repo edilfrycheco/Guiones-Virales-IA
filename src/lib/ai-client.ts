@@ -22,6 +22,13 @@ async function callAnthropicAPI(
   systemPrompt: string,
   userPrompt: string
 ): Promise<Response> {
+  const trimmedSystem = systemPrompt?.trim();
+  const trimmedUser = userPrompt?.trim();
+
+  if (!trimmedUser) {
+    throw new Error('El prompt del usuario no puede estar vacío');
+  }
+
   return fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -32,8 +39,8 @@ async function callAnthropicAPI(
     body: JSON.stringify({
       model,
       max_tokens: 2048,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }],
+      ...(trimmedSystem ? { system: trimmedSystem } : {}),
+      messages: [{ role: 'user', content: trimmedUser }],
     }),
   });
 }
