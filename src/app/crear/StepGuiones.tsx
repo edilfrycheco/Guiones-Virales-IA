@@ -15,6 +15,45 @@ import {
 } from './constants';
 import { getBestFrameworksForHook, explainHookFrameworkMatch } from '@/lib/hook-framework-mapper';
 import type { Framework } from '@/lib/viral-frameworks';
+import type { GeneratedScript } from './types';
+
+function ActiveScript({
+  script,
+  isSelected,
+  onSelect,
+}: {
+  script: GeneratedScript;
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <span className="text-sm font-semibold text-white">
+            {FRAMEWORK_LABELS[script.framework]}
+          </span>
+          <span className="text-xs text-[#5C5F66] ml-2">
+            {FRAMEWORK_DESCRIPTIONS[script.framework]}
+          </span>
+        </div>
+        <button
+          onClick={onSelect}
+          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+            isSelected
+              ? 'bg-[#5c7cfa] text-white'
+              : 'border border-[#2C2E33] text-[#909296] hover:border-[#5c7cfa] hover:text-white'
+          }`}
+        >
+          {isSelected ? '✓ Seleccionado' : 'Seleccionar este'}
+        </button>
+      </div>
+      <div className="bg-[#25262B] rounded-xl px-4 py-4 text-sm text-[#C1C2C5] leading-relaxed whitespace-pre-wrap max-h-[520px] overflow-y-auto">
+        {script.content}
+      </div>
+    </div>
+  );
+}
 
 interface Props {
   state: WizardState;
@@ -358,39 +397,16 @@ export default function StepGuiones({ state, update, onNext, onBack }: Props) {
           </div>
 
           {/* Active tab content */}
-          {state.generatedScripts[activeTab] && (() => {
-            const script = state.generatedScripts[activeTab];
-            const isSelected = state.selectedScriptIndex === activeTab;
-            return (
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <span className="text-sm font-semibold text-white">
-                      {FRAMEWORK_LABELS[script.framework]}
-                    </span>
-                    <span className="text-xs text-[#5C5F66] ml-2">
-                      {FRAMEWORK_DESCRIPTIONS[script.framework]}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() =>
-                      update({ selectedScriptIndex: activeTab, editedScript: script.content })
-                    }
-                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                      isSelected
-                        ? 'bg-[#5c7cfa] text-white'
-                        : 'border border-[#2C2E33] text-[#909296] hover:border-[#5c7cfa] hover:text-white'
-                    }`}
-                  >
-                    {isSelected ? '✓ Seleccionado' : 'Seleccionar este'}
-                  </button>
-                </div>
-                <div className="bg-[#25262B] rounded-xl px-4 py-4 text-sm text-[#C1C2C5] leading-relaxed whitespace-pre-wrap max-h-[520px] overflow-y-auto">
-                  {script.content}
-                </div>
-              </div>
-            );
-          })()}
+          {state.generatedScripts[activeTab] && <ActiveScript
+            script={state.generatedScripts[activeTab]}
+            isSelected={state.selectedScriptIndex === activeTab}
+            onSelect={() =>
+              update({
+                selectedScriptIndex: activeTab,
+                editedScript: state.generatedScripts[activeTab].content,
+              })
+            }
+          />}
         </div>
       )}
 

@@ -55,9 +55,7 @@ export default function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative ${
-                  item.primary && !isActive
-                    ? 'bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 hover:text-white'
-                    : isActive
+                  isActive
                     ? 'bg-indigo-500/10 text-indigo-400'
                     : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-white'
                 }`}
@@ -67,9 +65,7 @@ export default function Sidebar() {
                 )}
                 <Icon
                   size={20}
-                  className={`flex-shrink-0 ${
-                    isActive || item.primary ? 'text-indigo-400' : 'group-hover:text-white'
-                  }`}
+                  className={`flex-shrink-0 ${isActive ? 'text-indigo-400' : 'group-hover:text-white'}`}
                 />
                 {!collapsed && (
                   <div className="overflow-hidden">
