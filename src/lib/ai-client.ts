@@ -40,9 +40,11 @@ async function callAnthropicAPI(
 
 export async function generateWithAI(
   systemPrompt: string,
-  userPrompt: string
+  userPrompt: string,
+  styleContext?: string
 ): Promise<AIResponse> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
+  const finalSystem = styleContext ? `${systemPrompt}\n\n${styleContext}` : systemPrompt;
   // Modelo por defecto: claude-sonnet-4-6 (último modelo más capaz)
   // Override via env var AI_MODEL si quieres otro modelo
   const model = process.env.AI_MODEL || 'claude-sonnet-4-6';
@@ -60,7 +62,7 @@ export async function generateWithAI(
   // Intento inicial + reintentos automáticos
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const response = await callAnthropicAPI(apiKey, model, systemPrompt, userPrompt);
+      const response = await callAnthropicAPI(apiKey, model, finalSystem, userPrompt);
 
       // Éxito
       if (response.ok) {
