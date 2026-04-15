@@ -1,5 +1,7 @@
 // Edita un guión con una instrucción rápida (ej: "más agresivo", "más corto")
 import { NextRequest, NextResponse } from 'next/server';
+
+export const maxDuration = 30;
 import { generateWithAI } from '@/lib/ai-client';
 import { getHumanizerSystemPrompt, postProcessHumanize, type HumanizerConfig } from '@/lib/humanizer';
 
