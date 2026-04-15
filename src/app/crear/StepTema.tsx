@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import type { WizardState } from './types';
 import type { HookType } from '@/lib/viral-frameworks';
 import { HOOK_TEMPLATES } from '@/lib/viral-frameworks';
-import { suggestHookType } from '@/lib/hook-framework-mapper';
-import { HOOK_TYPE_LABELS, HOOK_TYPE_DESCRIPTIONS } from './constants';
+import { suggestHookType, suggestNiche, suggestTone } from '@/lib/hook-framework-mapper';
+import { HOOK_TYPE_LABELS, HOOK_TYPE_DESCRIPTIONS, NICHE_LABELS, TONE_LABELS } from './constants';
 
 interface Props {
   state: WizardState;
@@ -16,27 +16,44 @@ interface Props {
 export default function StepTema({ state, update, onNext }: Props) {
   const [showAll, setShowAll] = useState(false);
 
-  // Re-suggest when tema changes (only when in auto mode)
+  const analyzeAndUpdate = (tema: string, forceHookType?: HookType) => {
+    if (tema.length <= 3) {
+      update({ tema });
+      return;
+    }
+    const hookType = forceHookType ?? (state.hookTypeIsAuto ? suggestHookType(tema) : state.hookType);
+    const niche = suggestNiche(tema);
+    const tone = suggestTone(tema, hookType);
+    update({
+      tema,
+      ...(state.hookTypeIsAuto || forceHookType ? { hookType } : {}),
+      niche,
+      tone,
+    });
+  };
+
+  // Re-analyze if tema already has content on mount (from localStorage)
   useEffect(() => {
-    if (!state.hookTypeIsAuto || state.tema.length <= 3) return;
-    const suggested = suggestHookType(state.tema, state.niche);
-    if (suggested !== state.hookType) update({ hookType: suggested });
+    if (state.tema.length > 3 && state.hookTypeIsAuto) {
+      analyzeAndUpdate(state.tema);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.tema]);
+  }, []);
 
   const handleTemaChange = (tema: string) => {
-    const suggested = tema.length > 3 ? suggestHookType(tema, state.niche) : 'curiosidad';
-    update({ tema, hookType: state.hookTypeIsAuto ? suggested : state.hookType });
+    analyzeAndUpdate(tema);
   };
 
   const selectHookType = (hookType: HookType) => {
-    update({ hookType, hookTypeIsAuto: false });
+    const tone = suggestTone(state.tema, hookType);
+    update({ hookType, hookTypeIsAuto: false, tone });
     setShowAll(false);
   };
 
   const resetToAuto = () => {
-    const suggested = suggestHookType(state.tema, state.niche);
-    update({ hookType: suggested, hookTypeIsAuto: true });
+    const hookType = suggestHookType(state.tema);
+    const tone = suggestTone(state.tema, hookType);
+    update({ hookType, hookTypeIsAuto: true, tone });
     setShowAll(false);
   };
 
@@ -44,13 +61,15 @@ export default function StepTema({ state, update, onNext }: Props) {
     HOOK_TEMPLATES[state.hookType]?.[0]?.replace('{tema}', state.tema || '...') ?? '';
   const canContinue = state.tema.trim().length >= 3;
 
+  const detectedNiche = state.niche !== 'otro' ? state.niche : null;
+
   return (
     <div className="max-w-2xl mx-auto">
       <div className="bg-[#1A1B1E] border border-[#2C2E33] rounded-2xl p-8">
         <h2 className="text-xl font-semibold mb-2">¿Sobre qué es tu contenido?</h2>
         <p className="text-[#909296] text-sm mb-6">
-          Escribe el tema de tu video. La IA analizará el tema y sugerirá el tipo de gancho
-          más efectivo para capturar atención en los primeros 2 segundos.
+          Escribe el tema de tu video. La IA analizará el tema y configurará automáticamente
+          el tipo de gancho, nicho y tono óptimos.
         </p>
 
         {/* Tema input */}
@@ -66,7 +85,33 @@ export default function StepTema({ state, update, onNext }: Props) {
           />
         </div>
 
-        {/* Hook type suggestion — only shown when tema is long enough */}
+        {/* Auto-detected config — shown as soon as there's enough text */}
+        {canContinue && (
+          <div className="mb-5 bg-[#25262B] border border-[#2C2E33] rounded-xl px-4 py-3 flex items-start gap-3">
+            <span className="text-base mt-0.5">✨</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-[#909296] mb-2">Configuración detectada automáticamente</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="text-xs bg-[#1A1B1E] border border-[#5c7cfa]/30 text-[#5c7cfa] px-2.5 py-1 rounded-full font-medium">
+                  {HOOK_TYPE_LABELS[state.hookType]}
+                </span>
+                {detectedNiche && (
+                  <span className="text-xs bg-[#1A1B1E] border border-[#2C2E33] text-[#C1C2C5] px-2.5 py-1 rounded-full">
+                    {NICHE_LABELS[state.niche]}
+                  </span>
+                )}
+                <span className="text-xs bg-[#1A1B1E] border border-[#2C2E33] text-[#C1C2C5] px-2.5 py-1 rounded-full">
+                  {TONE_LABELS[state.tone]}
+                </span>
+              </div>
+              <p className="text-xs text-[#5C5F66] mt-2">
+                Puedes ajustarlo manualmente en los pasos siguientes.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Hook type selector — shown when tema is long enough */}
         {canContinue && (
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">

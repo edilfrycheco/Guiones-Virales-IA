@@ -1,7 +1,7 @@
 // Mapea tipos de gancho → frameworks óptimos
 // Lógica: ciertos ganchos encajan mejor con ciertas estructuras narrativas
 
-import type { Framework, HookType, Niche } from './viral-frameworks';
+import type { Framework, HookType, Niche, Tone } from './viral-frameworks';
 
 // Ranking de compatibilidad hook → framework (score 0-10)
 // Basado en el comportamiento real del gancho: lo que abre mejor se cierra mejor
@@ -189,6 +189,56 @@ export function suggestHookType(tema: string, niche?: Niche): HookType {
 
   if (niche && nicheDefaults[niche]) return nicheDefaults[niche]!;
   return 'curiosidad';
+}
+
+// Inferencia de nicho a partir del tema
+const NICHE_HINTS: Partial<Record<Niche, RegExp[]>> = {
+  marketing: [/marketing/i, /contenido/i, /redes social/i, /viral/i, /c[áa]mara/i, /\bvideo\b/i, /seguidores/i, /instagram/i, /tiktok/i, /youtube/i, /creador/i, /influencer/i],
+  negocios: [/negocio/i, /empresa/i, /emprender/i, /startup/i, /ventas/i, /cliente/i, /producto/i, /servicio/i, /empres/i],
+  finanzas: [/dinero/i, /finanz/i, /invers/i, /ahorr/i, /deuda/i, /riqueza/i, /econ[oó]m/i, /crypto/i, /bolsa/i, /acciones/i, /capital/i],
+  fitness: [/fitness/i, /gym/i, /ejercicio/i, /entrenar/i, /\bpeso\b/i, /m[úu]scul/i, /correr/i, /deporte/i, /dieta/i, /cuerpo/i],
+  tecnologia: [/tecnolog/i, /c[oó]digo/i, /programar/i, /software/i, /\bapp\b/i, /\bIA\b/i, /inteligencia artificial/i, /developer/i, /\bweb\b/i],
+  desarrollo_personal: [/mentalidad/i, /h[áa]bito/i, /disciplina/i, /crecer/i, /mejora personal/i, /productividad/i, /motivaci[oó]n/i],
+  educacion: [/aprender/i, /estudiar/i, /educac/i, /escuela/i, /idioma/i, /curso/i, /ense[ñn]/i],
+  cocina: [/cocina/i, /receta/i, /comida/i, /chef/i, /platillo/i, /ingrediente/i],
+  viajes: [/viaj/i, /pa[íi]s/i, /aventura/i, /ciudad/i, /mochilero/i, /turismo/i],
+  moda: [/\bmoda\b/i, /ropa/i, /outfit/i, /fashion/i, /tendencia/i, /vestuario/i],
+  relaciones: [/relac/i, /amor/i, /pareja/i, /familia/i, /comunicac/i, /t[oó]xico/i, /romance/i],
+  lifestyle: [/rutina/i, /morning routine/i, /minimalismo/i, /\bvida\b/i, /bienestar/i],
+};
+
+export function suggestNiche(tema: string): Niche {
+  for (const [niche, patterns] of Object.entries(NICHE_HINTS) as [Niche, RegExp[]][]) {
+    if (patterns && patterns.some((p) => p.test(tema))) return niche;
+  }
+  return 'otro';
+}
+
+// Inferencia de tono a partir del tipo de gancho y palabras clave del tema
+const HOOK_DEFAULT_TONE: Record<HookType, Tone> = {
+  historia: 'casual',
+  confesion: 'inspirador',
+  reto: 'energetico',
+  controversia: 'energetico',
+  dato_sorprendente: 'educativo',
+  mito: 'educativo',
+  pregunta: 'educativo',
+  declaracion_impactante: 'inspirador',
+  pattern_interrupt: 'energetico',
+  curiosidad: 'casual',
+};
+
+export function suggestTone(tema: string, hookType: HookType): Tone {
+  if (/desastre/i.test(tema) || /rid[íi]culo/i.test(tema) || /verg[üu]enza/i.test(tema) || /\bfail\b/i.test(tema) || /gracioso/i.test(tema)) {
+    return 'humoristico';
+  }
+  if (/tutorial/i.test(tema) || /paso a paso/i.test(tema) || /c[oó]mo hacer/i.test(tema) || /gu[íi]a/i.test(tema)) {
+    return 'educativo';
+  }
+  if (/logr[ée]/i.test(tema) || /transform/i.test(tema) || /cambi[ée]/i.test(tema) || /sue[ñn]o/i.test(tema)) {
+    return 'inspirador';
+  }
+  return HOOK_DEFAULT_TONE[hookType];
 }
 
 // Explicación humana de por qué un framework combina con un hook
