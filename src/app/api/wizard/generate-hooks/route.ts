@@ -1,5 +1,8 @@
 // Genera N ganchos como array estructurado (para el paso 2 del wizard)
 import { NextRequest, NextResponse } from 'next/server';
+
+export const maxDuration = 30;
+
 import { generateWithAI } from '@/lib/ai-client';
 import { getHumanizerSystemPrompt, postProcessHumanize, type HumanizerConfig } from '@/lib/humanizer';
 import { HOOK_TEMPLATES, type HookType, type Platform, type Tone, type Niche } from '@/lib/viral-frameworks';

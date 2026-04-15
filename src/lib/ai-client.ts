@@ -51,7 +51,12 @@ export async function generateWithAI(
   styleContext?: string
 ): Promise<AIResponse> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  const finalSystem = styleContext ? `${systemPrompt}\n\n${styleContext}` : systemPrompt;
+  // Treat a whitespace-only styleContext the same as an absent one so we never
+  // end up sending a system prompt that is only whitespace after trimming.
+  const trimmedStyleContext = styleContext?.trim();
+  const finalSystem = trimmedStyleContext
+    ? `${systemPrompt}\n\n${trimmedStyleContext}`
+    : systemPrompt;
   // Modelo por defecto: claude-sonnet-4-6 (último modelo más capaz)
   // Override via env var AI_MODEL si quieres otro modelo
   const model = process.env.AI_MODEL || 'claude-sonnet-4-6';
@@ -74,8 +79,16 @@ export async function generateWithAI(
       // Éxito
       if (response.ok) {
         const data = await response.json();
+        // Find the first text block — the API can return multiple block types
+        // (e.g. thinking blocks before text blocks in extended-thinking mode).
+        // Accessing content[0].text blindly would return undefined for non-text blocks.
+        const textBlock = (data.content as Array<{ type: string; text?: string }>)
+          ?.find((b) => b.type === 'text');
+        if (!textBlock?.text) {
+          throw new Error('La IA no devolvió contenido de texto. Inténtalo de nuevo.');
+        }
         return {
-          content: data.content[0].text,
+          content: textBlock.text,
           model,
         };
       }
