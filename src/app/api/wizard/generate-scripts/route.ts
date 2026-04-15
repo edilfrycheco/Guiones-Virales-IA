@@ -20,6 +20,7 @@ interface Body {
   contexto?: string;
   humanizer: HumanizerConfig;
   useMyStyle?: boolean;
+  incluirCta?: boolean;
 }
 
 export async function POST(request: NextRequest) {
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
           length: body.length,
           contexto_adicional: `Usa EXACTAMENTE este gancho como arranque del guión: "${body.hookText}". ${body.contexto || ''}`,
           audiencia_objetivo: body.audiencia,
-          incluir_cta: true,
+          incluir_cta: body.incluirCta ?? true,
         },
         body.humanizer
       );

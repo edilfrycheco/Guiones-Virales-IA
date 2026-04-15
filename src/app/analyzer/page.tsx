@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import ScoreCard, { TotalScore } from '@/components/ScoreCard';
 import { BarChart3, Search, AlertTriangle } from 'lucide-react';
@@ -25,6 +25,17 @@ export default function AnalyzerPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [script, setScript] = useState('');
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
+
+  // Pick up script passed from the wizard via sessionStorage
+  useEffect(() => {
+    try {
+      const fromWizard = sessionStorage.getItem('analyze_script');
+      if (fromWizard) {
+        setScript(fromWizard);
+        sessionStorage.removeItem('analyze_script');
+      }
+    } catch {}
+  }, []);
 
   const handleAnalyze = async () => {
     if (!script.trim()) return;
