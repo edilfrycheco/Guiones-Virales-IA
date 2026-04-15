@@ -1,9 +1,41 @@
 // Cliente de IA para generación de guiones
 // Soporta Anthropic Claude como motor principal
+// Incluye reintentos automáticos con exponential backoff para errores 529/503/429
 
 interface AIResponse {
   content: string;
   model: string;
+}
+
+// Códigos HTTP que justifican reintento automático
+const RETRYABLE_STATUS_CODES = [429, 500, 502, 503, 504, 529];
+const MAX_RETRIES = 3;
+const BASE_DELAY_MS = 2000; // 2s, 4s, 8s
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function callAnthropicAPI(
+  apiKey: string,
+  model: string,
+  systemPrompt: string,
+  userPrompt: string
+): Promise<Response> {
+  return fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 2048,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }],
+    }),
+  });
 }
 
 export async function generateWithAI(
@@ -23,36 +55,70 @@ export async function generateWithAI(
     };
   }
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 2048,
-      system: systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: userPrompt,
-        },
-      ],
-    }),
-  });
+  let lastError: Error | null = null;
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`API Error (${response.status}): ${error}`);
+  // Intento inicial + reintentos automáticos
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const response = await callAnthropicAPI(apiKey, model, systemPrompt, userPrompt);
+
+      // Éxito
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          content: data.content[0].text,
+          model,
+        };
+      }
+
+      // Error recuperable: reintentar con backoff
+      if (RETRYABLE_STATUS_CODES.includes(response.status) && attempt < MAX_RETRIES) {
+        const delay = BASE_DELAY_MS * Math.pow(2, attempt); // 2s, 4s, 8s
+        console.log(`[AI] Error ${response.status}, reintentando en ${delay}ms (intento ${attempt + 1}/${MAX_RETRIES})`);
+        await sleep(delay);
+        continue;
+      }
+
+      // Error no recuperable o agotamos reintentos
+      const errorText = await response.text();
+      const friendlyMessage = getFriendlyErrorMessage(response.status, errorText);
+      throw new Error(friendlyMessage);
+
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      // Si es error de red (fetch falla), también reintentamos
+      if (attempt < MAX_RETRIES && error instanceof TypeError) {
+        const delay = BASE_DELAY_MS * Math.pow(2, attempt);
+        await sleep(delay);
+        continue;
+      }
+      throw lastError;
+    }
   }
 
-  const data = await response.json();
-  return {
-    content: data.content[0].text,
-    model,
-  };
+  throw lastError || new Error('No se pudo completar la generación');
+}
+
+function getFriendlyErrorMessage(status: number, errorText: string): string {
+  switch (status) {
+    case 529:
+      return 'Los servidores de Anthropic están saturados en este momento. Ya reintentamos 3 veces. Por favor, espera 1-2 minutos y vuelve a intentarlo. Si persiste, prueba cambiar a Haiku 4.5 (claude-haiku-4-5-20251001) que suele estar menos saturado.';
+    case 429:
+      return 'Alcanzaste el límite de peticiones por minuto de Anthropic. Espera 30 segundos y reintenta.';
+    case 401:
+      return 'Tu API key de Anthropic es inválida o expiró. Verifica en console.anthropic.com que sigue activa.';
+    case 402:
+      return 'Tu cuenta de Anthropic no tiene crédito. Ve a console.anthropic.com → Billing y agrega saldo.';
+    case 404:
+      return `El modelo configurado no existe o no está disponible en tu cuenta. Verifica la variable AI_MODEL en Vercel. Modelos válidos: claude-sonnet-4-6, claude-opus-4-6, claude-haiku-4-5-20251001`;
+    case 500:
+    case 502:
+    case 503:
+    case 504:
+      return `Error temporal del servidor de Anthropic (${status}). Reintentamos varias veces sin éxito. Espera unos minutos y reintenta.`;
+    default:
+      return `API Error (${status}): ${errorText}`;
+  }
 }
 
 function generateDemoResponse(prompt: string): string {
