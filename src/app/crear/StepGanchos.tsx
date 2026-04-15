@@ -24,10 +24,13 @@ export default function StepGanchos({ state, update, onNext, onBack }: Props) {
   const [error, setError] = useState('');
   const [savedIndices, setSavedIndices] = useState<Set<number>>(new Set());
   const [savingIdx, setSavingIdx] = useState<number | null>(null);
+  const [editingIdx, setEditingIdx] = useState<number | null>(null);
+  const [editText, setEditText] = useState('');
 
   const generateHooks = async () => {
     setLoading(true);
     setError('');
+    setEditingIdx(null);
     update({ generatedHooks: [], selectedHookIndex: null });
     try {
       const res = await fetch('/api/wizard/generate-hooks', {
@@ -54,6 +57,13 @@ export default function StepGanchos({ state, update, onNext, onBack }: Props) {
     }
   };
 
+  const saveEdit = (idx: number) => {
+    const updated = [...state.generatedHooks];
+    updated[idx] = { ...updated[idx], text: editText.trim() || updated[idx].text };
+    update({ generatedHooks: updated });
+    setEditingIdx(null);
+  };
+
   const saveHookFavorite = async (hook: GeneratedHook, idx: number) => {
     if (savedIndices.has(idx)) return;
     setSavingIdx(idx);
@@ -73,7 +83,7 @@ export default function StepGanchos({ state, update, onNext, onBack }: Props) {
       });
       if (res.ok) setSavedIndices((prev) => new Set([...prev, idx]));
     } catch {
-      // Silent fail when not logged in
+      // Silent — user not logged in
     } finally {
       setSavingIdx(null);
     }
@@ -88,14 +98,12 @@ export default function StepGanchos({ state, update, onNext, onBack }: Props) {
       <div className="bg-[#1A1B1E] border border-[#2C2E33] rounded-2xl p-6">
         <h2 className="text-lg font-semibold mb-1">Configura tus ganchos</h2>
         <p className="text-[#909296] text-sm mb-5">
-          Tema:{' '}
-          <span className="text-white italic">"{state.tema}"</span>
+          Tema: <span className="text-white italic">"{state.tema}"</span>
           {' · '}
-          Gancho:{' '}
-          <span className="text-[#5c7cfa]">{HOOK_TYPE_LABELS[state.hookType]}</span>
+          Gancho: <span className="text-[#5c7cfa]">{HOOK_TYPE_LABELS[state.hookType]}</span>
         </p>
 
-        {/* Row 1: Platform, Tone, Niche */}
+        {/* Platform, Tone, Niche */}
         <div className="grid grid-cols-3 gap-3 mb-4">
           {(
             [
@@ -112,18 +120,15 @@ export default function StepGanchos({ state, update, onNext, onBack }: Props) {
                 className="w-full bg-[#25262B] border border-[#2C2E33] rounded-lg px-3 py-2 text-sm text-white focus:border-[#5c7cfa] focus:outline-none"
               >
                 {Object.entries(options).map(([val, lbl]) => (
-                  <option key={val} value={val}>
-                    {lbl as string}
-                  </option>
+                  <option key={val} value={val}>{lbl as string}</option>
                 ))}
               </select>
             </div>
           ))}
         </div>
 
-        {/* Row 2: Humanizer */}
+        {/* Humanizer */}
         <div className="grid grid-cols-3 gap-3 mb-4">
-          {/* Nivel */}
           <div>
             <label className="block text-xs text-[#909296] mb-1.5">Humanización</label>
             <div className="flex gap-1">
@@ -142,7 +147,6 @@ export default function StepGanchos({ state, update, onNext, onBack }: Props) {
               ))}
             </div>
           </div>
-          {/* Región */}
           <div>
             <label className="block text-xs text-[#909296] mb-1.5">Región</label>
             <select
@@ -153,13 +157,10 @@ export default function StepGanchos({ state, update, onNext, onBack }: Props) {
               className="w-full bg-[#25262B] border border-[#2C2E33] rounded-lg px-3 py-2 text-sm text-white focus:border-[#5c7cfa] focus:outline-none"
             >
               {Object.entries(HUMANIZER_REGION_LABELS).map(([val, lbl]) => (
-                <option key={val} value={val}>
-                  {lbl}
-                </option>
+                <option key={val} value={val}>{lbl}</option>
               ))}
             </select>
           </div>
-          {/* Personalidad */}
           <div>
             <label className="block text-xs text-[#909296] mb-1.5">Personalidad</label>
             <select
@@ -170,15 +171,13 @@ export default function StepGanchos({ state, update, onNext, onBack }: Props) {
               className="w-full bg-[#25262B] border border-[#2C2E33] rounded-lg px-3 py-2 text-sm text-white focus:border-[#5c7cfa] focus:outline-none"
             >
               {Object.entries(HUMANIZER_PERSONALIDAD_LABELS).map(([val, lbl]) => (
-                <option key={val} value={val}>
-                  {lbl}
-                </option>
+                <option key={val} value={val}>{lbl}</option>
               ))}
             </select>
           </div>
         </div>
 
-        {/* Row 3: Cantidad + useMyStyle */}
+        {/* Cantidad + useMyStyle */}
         <div className="flex items-center gap-6 mb-5">
           <div className="flex-1">
             <label className="block text-xs text-[#909296] mb-2">
@@ -194,8 +193,7 @@ export default function StepGanchos({ state, update, onNext, onBack }: Props) {
               className="w-full accent-[#5c7cfa]"
             />
             <div className="flex justify-between text-xs text-[#5C5F66] mt-1">
-              <span>3</span>
-              <span>10</span>
+              <span>3</span><span>10</span>
             </div>
           </div>
           <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
@@ -250,19 +248,23 @@ export default function StepGanchos({ state, update, onNext, onBack }: Props) {
             {state.generatedHooks.map((hook, idx) => {
               const isSelected = state.selectedHookIndex === idx;
               const isSaved = savedIndices.has(idx);
+              const isEditing = editingIdx === idx;
+
               return (
                 <div
                   key={idx}
-                  onClick={() => update({ selectedHookIndex: idx })}
-                  className={`relative rounded-xl border p-4 cursor-pointer transition-all ${
-                    isSelected
-                      ? 'border-[#5c7cfa] bg-[#5c7cfa]/5'
-                      : 'border-[#2C2E33] bg-[#25262B] hover:border-[#5c7cfa]/40'
+                  onClick={() => !isEditing && update({ selectedHookIndex: idx })}
+                  className={`relative rounded-xl border p-4 transition-all ${
+                    isEditing
+                      ? 'border-[#5c7cfa] bg-[#5c7cfa]/5 cursor-default'
+                      : isSelected
+                      ? 'border-[#5c7cfa] bg-[#5c7cfa]/5 cursor-pointer'
+                      : 'border-[#2C2E33] bg-[#25262B] hover:border-[#5c7cfa]/40 cursor-pointer'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      {/* Radio indicator */}
+                    {/* Radio */}
+                    {!isEditing && (
                       <div
                         className={`mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
                           isSelected ? 'border-[#5c7cfa] bg-[#5c7cfa]' : 'border-[#5C5F66]'
@@ -270,35 +272,81 @@ export default function StepGanchos({ state, update, onNext, onBack }: Props) {
                       >
                         {isSelected && <div className="w-2 h-2 bg-white rounded-full" />}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-white text-sm leading-relaxed">
-                          {hook.text}
-                        </p>
-                        {hook.reason && (
-                          <p className="text-xs text-[#909296] mt-1.5">💡 {hook.reason}</p>
-                        )}
-                      </div>
-                    </div>
-                    {/* Star / save button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        saveHookFavorite(hook, idx);
-                      }}
-                      disabled={savingIdx === idx || isSaved}
-                      title={isSaved ? 'Guardado en tu biblioteca' : 'Guardar en favoritos'}
-                      className={`flex-shrink-0 p-1.5 rounded-lg transition-all ${
-                        isSaved
-                          ? 'text-yellow-400'
-                          : 'text-[#5C5F66] hover:text-yellow-400 hover:bg-yellow-400/10'
-                      }`}
-                    >
-                      {savingIdx === idx ? (
-                        <span className="w-4 h-4 border border-current border-t-transparent rounded-full animate-spin block" />
+                    )}
+
+                    {/* Content or editor */}
+                    <div className="flex-1 min-w-0">
+                      {isEditing ? (
+                        <>
+                          <textarea
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            rows={2}
+                            autoFocus
+                            className="w-full bg-[#1A1B1E] border border-[#5c7cfa] rounded-lg px-3 py-2 text-sm text-white resize-none focus:outline-none"
+                          />
+                          <div className="flex gap-2 mt-2">
+                            <button
+                              onClick={() => saveEdit(idx)}
+                              className="px-3 py-1 bg-[#5c7cfa] text-white rounded-lg text-xs font-medium"
+                            >
+                              Guardar
+                            </button>
+                            <button
+                              onClick={() => setEditingIdx(null)}
+                              className="px-3 py-1 bg-[#25262B] border border-[#2C2E33] text-[#909296] rounded-lg text-xs"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </>
                       ) : (
-                        <span className="text-lg leading-none">{isSaved ? '⭐' : '☆'}</span>
+                        <>
+                          <p className="font-medium text-white text-sm leading-relaxed">
+                            {hook.text}
+                          </p>
+                          {hook.reason && (
+                            <p className="text-xs text-[#909296] mt-1.5">💡 {hook.reason}</p>
+                          )}
+                        </>
                       )}
-                    </button>
+                    </div>
+
+                    {/* Actions (edit + star) */}
+                    {!isEditing && (
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingIdx(idx);
+                            setEditText(hook.text);
+                          }}
+                          title="Editar gancho"
+                          className="p-1.5 rounded-lg text-[#5C5F66] hover:text-white hover:bg-[#2C2E33] transition-all text-sm"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            saveHookFavorite(hook, idx);
+                          }}
+                          disabled={savingIdx === idx || isSaved}
+                          title={isSaved ? 'Guardado en tu biblioteca' : 'Guardar en favoritos'}
+                          className={`p-1.5 rounded-lg transition-all ${
+                            isSaved
+                              ? 'text-yellow-400'
+                              : 'text-[#5C5F66] hover:text-yellow-400 hover:bg-yellow-400/10'
+                          }`}
+                        >
+                          {savingIdx === idx ? (
+                            <span className="w-4 h-4 border border-current border-t-transparent rounded-full animate-spin block" />
+                          ) : (
+                            <span className="text-base leading-none">{isSaved ? '⭐' : '☆'}</span>
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

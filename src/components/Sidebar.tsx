@@ -4,8 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Wand2,
-  Zap,
   BarChart3,
   BookTemplate,
   Sparkles,
@@ -15,18 +13,11 @@ import {
   Layers,
 } from 'lucide-react';
 
-// Main flow items (shown prominently)
-const MAIN_NAV = [
+const NAV_ITEMS = [
   { href: '/', label: 'Dashboard', icon: Flame, description: 'Vista general' },
-  { href: '/crear', label: 'Crear Guión', icon: Layers, description: 'Flujo guiado IA', primary: true },
+  { href: '/crear', label: 'Crear Guión', icon: Layers, description: 'Flujo guiado IA' },
   { href: '/analyzer', label: 'Analizador', icon: BarChart3, description: 'Evaluar guiones' },
   { href: '/templates', label: 'Plantillas', icon: BookTemplate, description: 'Frameworks' },
-];
-
-// Standalone tools (secondary)
-const TOOLS_NAV = [
-  { href: '/hooks', label: 'Ganchos', icon: Zap, description: 'Generar hooks' },
-  { href: '/generator', label: 'Generador', icon: Wand2, description: 'Crear guiones' },
 ];
 
 export default function Sidebar() {
@@ -56,7 +47,7 @@ export default function Sidebar() {
       <nav className="flex-1 py-4 px-2 overflow-y-auto">
         {/* Main nav items */}
         <div className="space-y-1 mb-2">
-          {MAIN_NAV.map((item) => {
+          {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
             return (
@@ -95,49 +86,6 @@ export default function Sidebar() {
           })}
         </div>
 
-        {/* Separator + Herramientas Rápidas */}
-        <div className={`mt-4 mb-2 ${collapsed ? 'border-t border-[var(--border-color)] pt-3' : ''}`}>
-          {!collapsed && (
-            <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-1">
-              Herramientas Rápidas
-            </p>
-          )}
-          <div className="space-y-1">
-            {TOOLS_NAV.map((item) => {
-              const isActive = pathname === item.href;
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative ${
-                    isActive
-                      ? 'bg-indigo-500/10 text-indigo-400'
-                      : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-white'
-                  }`}
-                >
-                  {isActive && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-indigo-500 rounded-r-full" />
-                  )}
-                  <Icon
-                    size={20}
-                    className={`flex-shrink-0 ${isActive ? 'text-indigo-400' : 'group-hover:text-white'}`}
-                  />
-                  {!collapsed && (
-                    <div className="overflow-hidden">
-                      <span className="text-[14px] font-medium block">{item.label}</span>
-                      {!isActive && (
-                        <span className="text-[11px] text-[var(--text-muted)] block">
-                          {item.description}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
       </nav>
 
       {/* Footer */}

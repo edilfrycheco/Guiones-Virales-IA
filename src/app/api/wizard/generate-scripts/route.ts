@@ -1,5 +1,7 @@
 // Genera 3 guiones en paralelo (uno por cada framework auto-sugerido) — Paso 3 del wizard
 import { NextRequest, NextResponse } from 'next/server';
+
+export const maxDuration = 60;
 import { generateWithAI } from '@/lib/ai-client';
 import { postProcessHumanize, type HumanizerConfig } from '@/lib/humanizer';
 import { buildScriptPrompt } from '@/lib/prompt-builder';
