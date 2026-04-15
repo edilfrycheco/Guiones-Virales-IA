@@ -11,9 +11,9 @@ export async function generateWithAI(
   userPrompt: string
 ): Promise<AIResponse> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  // Modelo por defecto: claude-sonnet-4-5 (balance calidad/costo)
+  // Modelo por defecto: claude-sonnet-4-6 (último modelo más capaz)
   // Override via env var AI_MODEL si quieres otro modelo
-  const model = process.env.AI_MODEL || 'claude-sonnet-4-5-20250929';
+  const model = process.env.AI_MODEL || 'claude-sonnet-4-6';
 
   if (!apiKey) {
     // Modo demo: generar respuesta basada en plantillas
