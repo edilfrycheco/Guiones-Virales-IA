@@ -2,10 +2,20 @@
 
 import { useEffect, useState } from 'react';
 import type { WizardState } from './types';
-import type { HookType } from '@/lib/viral-frameworks';
+import type { HookType, ContentObjective, UniversalPillar } from '@/lib/viral-frameworks';
 import { HOOK_TEMPLATES } from '@/lib/viral-frameworks';
-import { suggestHookType, suggestNiche, suggestTone } from '@/lib/hook-framework-mapper';
-import { HOOK_TYPE_LABELS, HOOK_TYPE_DESCRIPTIONS, NICHE_LABELS, TONE_LABELS } from './constants';
+import { suggestHookType, suggestNiche, suggestTone, suggestUniversalPillar } from '@/lib/hook-framework-mapper';
+import {
+  HOOK_TYPE_LABELS,
+  HOOK_TYPE_DESCRIPTIONS,
+  NICHE_LABELS,
+  TONE_LABELS,
+  CONTENT_OBJECTIVE_LABELS,
+  CONTENT_OBJECTIVE_ICONS,
+  CONTENT_OBJECTIVE_DESCRIPTIONS,
+  UNIVERSAL_PILLAR_LABELS,
+  UNIVERSAL_PILLAR_DESCRIPTIONS,
+} from './constants';
 
 interface Props {
   state: WizardState;
@@ -24,11 +34,13 @@ export default function StepTema({ state, update, onNext }: Props) {
     const hookType = forceHookType ?? (state.hookTypeIsAuto ? suggestHookType(tema) : state.hookType);
     const niche = suggestNiche(tema);
     const tone = suggestTone(tema, hookType);
+    const universalPillar = suggestUniversalPillar(niche);
     update({
       tema,
       ...(state.hookTypeIsAuto || forceHookType ? { hookType } : {}),
       niche,
       tone,
+      universalPillar,
     });
   };
 
@@ -60,7 +72,6 @@ export default function StepTema({ state, update, onNext }: Props) {
   const exampleHook =
     HOOK_TEMPLATES[state.hookType]?.[0]?.replace('{tema}', state.tema || '...') ?? '';
   const canContinue = state.tema.trim().length >= 3;
-
   const detectedNiche = state.niche !== 'otro' ? state.niche : null;
 
   return (
@@ -68,8 +79,8 @@ export default function StepTema({ state, update, onNext }: Props) {
       <div className="bg-[#1A1B1E] border border-[#2C2E33] rounded-2xl p-8">
         <h2 className="text-xl font-semibold mb-2">¿Sobre qué es tu contenido?</h2>
         <p className="text-[#909296] text-sm mb-6">
-          Escribe el tema de tu video. La IA analizará el tema y configurará automáticamente
-          el tipo de gancho, nicho y tono óptimos.
+          Escribe el tema, elige el objetivo de la semana y el pilar que quieres activar.
+          La IA configurará todo lo demás automáticamente.
         </p>
 
         {/* Tema input */}
@@ -85,12 +96,101 @@ export default function StepTema({ state, update, onNext }: Props) {
           />
         </div>
 
-        {/* Auto-detected config — shown as soon as there's enough text */}
+        {/* S1–S4 content objective selector */}
+        <div className="mb-5">
+          <label className="block text-sm font-medium text-[#C1C2C5] mb-1">
+            Objetivo del video esta semana
+          </label>
+          <p className="text-xs text-[#5C5F66] mb-3">
+            Rota cada semana: S1 Alcance → S2 Educativo → S3 Conexión → S4 Autoridad
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {(Object.entries(CONTENT_OBJECTIVE_LABELS) as [ContentObjective, string][]).map(
+              ([obj, label]) => {
+                const isSelected = state.contentObjective === obj;
+                return (
+                  <button
+                    key={obj}
+                    onClick={() => update({ contentObjective: obj })}
+                    className={`text-left p-3 rounded-xl border transition-all ${
+                      isSelected
+                        ? 'border-[#5c7cfa] bg-[#5c7cfa]/10'
+                        : 'border-[#2C2E33] bg-[#25262B] hover:border-[#5c7cfa]/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span>{CONTENT_OBJECTIVE_ICONS[obj]}</span>
+                      <span
+                        className={`text-sm font-semibold ${
+                          isSelected ? 'text-white' : 'text-[#C1C2C5]'
+                        }`}
+                      >
+                        {label}
+                      </span>
+                      {isSelected && (
+                        <span className="ml-auto text-[#5c7cfa] text-xs font-bold">✓</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-[#5C5F66] leading-snug">
+                      {CONTENT_OBJECTIVE_DESCRIPTIONS[obj]}
+                    </div>
+                  </button>
+                );
+              }
+            )}
+          </div>
+        </div>
+
+        {/* Universal pillar selector */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-[#C1C2C5] mb-1">
+            Pilar universal — ¿qué deseo profundo activa tu contenido?
+          </label>
+          <p className="text-xs text-[#5C5F66] mb-3">
+            Todo contenido viral toca al menos uno de estos 4 deseos fundamentales
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {(Object.entries(UNIVERSAL_PILLAR_LABELS) as [UniversalPillar, string][]).map(
+              ([pillar, label]) => {
+                const isSelected = state.universalPillar === pillar;
+                return (
+                  <button
+                    key={pillar}
+                    onClick={() => update({ universalPillar: pillar })}
+                    className={`text-left p-3 rounded-xl border transition-all ${
+                      isSelected
+                        ? 'border-[#5c7cfa] bg-[#5c7cfa]/10'
+                        : 'border-[#2C2E33] bg-[#25262B] hover:border-[#5c7cfa]/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span
+                        className={`text-sm font-semibold ${
+                          isSelected ? 'text-white' : 'text-[#C1C2C5]'
+                        }`}
+                      >
+                        {label}
+                      </span>
+                      {isSelected && (
+                        <span className="ml-auto text-[#5c7cfa] text-xs font-bold">✓</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-[#5C5F66]">
+                      {UNIVERSAL_PILLAR_DESCRIPTIONS[pillar]}
+                    </div>
+                  </button>
+                );
+              }
+            )}
+          </div>
+        </div>
+
+        {/* Auto-detected config — shown when tema is long enough */}
         {canContinue && (
           <div className="mb-5 bg-[#25262B] border border-[#2C2E33] rounded-xl px-4 py-3 flex items-start gap-3">
             <span className="text-base mt-0.5">✨</span>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-[#909296] mb-2">Configuración detectada automáticamente</p>
+              <p className="text-xs text-[#909296] mb-2">Configuración detectada del tema</p>
               <div className="flex flex-wrap gap-2">
                 <span className="text-xs bg-[#1A1B1E] border border-[#5c7cfa]/30 text-[#5c7cfa] px-2.5 py-1 rounded-full font-medium">
                   {HOOK_TYPE_LABELS[state.hookType]}
@@ -105,13 +205,13 @@ export default function StepTema({ state, update, onNext }: Props) {
                 </span>
               </div>
               <p className="text-xs text-[#5C5F66] mt-2">
-                Puedes ajustarlo manualmente en los pasos siguientes.
+                Puedes ajustarlo en los pasos siguientes.
               </p>
             </div>
           </div>
         )}
 
-        {/* Hook type selector — shown when tema is long enough */}
+        {/* Hook type selector */}
         {canContinue && (
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
@@ -135,7 +235,6 @@ export default function StepTema({ state, update, onNext }: Props) {
             </div>
 
             {!showAll ? (
-              /* Current suggestion */
               <div
                 className="bg-[#25262B] border border-[#5c7cfa]/40 rounded-xl p-4 cursor-pointer hover:border-[#5c7cfa] transition-colors"
                 onClick={() => setShowAll(true)}
@@ -165,7 +264,6 @@ export default function StepTema({ state, update, onNext }: Props) {
                 </div>
               </div>
             ) : (
-              /* All hook types grid */
               <div className="grid grid-cols-2 gap-2">
                 {(Object.entries(HOOK_TYPE_LABELS) as [HookType, string][]).map(
                   ([type, label]) => (

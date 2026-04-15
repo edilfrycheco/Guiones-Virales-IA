@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export const maxDuration = 30;
 import { generateWithAI } from '@/lib/ai-client';
 import { getHumanizerSystemPrompt, postProcessHumanize, type HumanizerConfig } from '@/lib/humanizer';
-import { HOOK_TEMPLATES, type HookType, type Platform, type Tone, type Niche } from '@/lib/viral-frameworks';
+import { HOOK_TEMPLATES, type HookType, type Platform, type Tone, type Niche, type ContentObjective, type UniversalPillar } from '@/lib/viral-frameworks';
 import { getServerSupabase } from '@/lib/supabase';
 import { buildStyleContext, loadUserStyle } from '@/lib/style-profile';
 
@@ -17,6 +17,8 @@ interface Body {
   cantidad: number;
   humanizer: HumanizerConfig;
   useMyStyle?: boolean;
+  contentObjective?: ContentObjective;
+  universalPillar?: UniversalPillar;
 }
 
 export async function POST(request: NextRequest) {
@@ -51,6 +53,19 @@ export async function POST(request: NextRequest) {
 
 ${humanPrompt}`;
 
+    const objectiveMap: Record<string, string> = {
+      alcance: 'S1 ALCANCE — ultra-compartible, impacto máximo, optimizado para no-seguidores',
+      educativo: 'S2 EDUCATIVO — promete aprendizaje valioso, optimizado para saves',
+      conexion: 'S3 CONEXIÓN — vulnerabilidad y resonancia emocional, optimizado para comentarios',
+      autoridad: 'S4 AUTORIDAD — demuestra expertise, optimizado para follows y confianza',
+    };
+    const pillarMap: Record<string, string> = {
+      dinero: 'DINERO — activa el deseo de mejorar la situación económica',
+      relaciones: 'RELACIONES — activa el deseo de conexión humana y pertenencia',
+      estatus: 'ESTATUS — activa el deseo de ser respetado y reconocido',
+      salud: 'SALUD — activa el deseo de bienestar y energía',
+    };
+
     const userPrompt = `Genera EXACTAMENTE ${cantidad} ganchos virales diferentes para:
 
 TEMA: ${body.tema}
@@ -58,6 +73,8 @@ TIPO: ${body.hookType}
 PLATAFORMA: ${body.platform}
 TONO: ${body.tone}
 NICHO: ${body.niche}
+${body.contentObjective ? `OBJETIVO DEL VIDEO: ${objectiveMap[body.contentObjective]}` : ''}
+${body.universalPillar ? `PILAR UNIVERSAL: ${pillarMap[body.universalPillar]}` : ''}
 
 EJEMPLOS (inspírate, crea variaciones ORIGINALES):
   - ${hookRef}

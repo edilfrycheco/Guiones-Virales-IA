@@ -1,7 +1,7 @@
 // Mapea tipos de gancho → frameworks óptimos
 // Lógica: ciertos ganchos encajan mejor con ciertas estructuras narrativas
 
-import type { Framework, HookType, Niche, Tone } from './viral-frameworks';
+import type { Framework, HookType, Niche, Tone, UniversalPillar } from './viral-frameworks';
 
 // Ranking de compatibilidad hook → framework (score 0-10)
 // Basado en el comportamiento real del gancho: lo que abre mejor se cierra mejor
@@ -239,6 +239,25 @@ export function suggestTone(tema: string, hookType: HookType): Tone {
     return 'inspirador';
   }
   return HOOK_DEFAULT_TONE[hookType];
+}
+
+// Inferencia de pilar universal a partir del nicho
+export function suggestUniversalPillar(niche: Niche): UniversalPillar {
+  const map: Partial<Record<Niche, UniversalPillar>> = {
+    finanzas: 'dinero',
+    negocios: 'dinero',
+    marketing: 'estatus',
+    desarrollo_personal: 'estatus',
+    educacion: 'estatus',
+    tecnologia: 'estatus',
+    fitness: 'salud',
+    cocina: 'salud',
+    lifestyle: 'salud',
+    relaciones: 'relaciones',
+    viajes: 'estatus',
+    moda: 'estatus',
+  };
+  return map[niche] ?? 'dinero';
 }
 
 // Explicación humana de por qué un framework combina con un hook

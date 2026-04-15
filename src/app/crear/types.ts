@@ -1,4 +1,4 @@
-import type { Framework, HookType, Niche, Platform, ScriptLength, Tone } from '@/lib/viral-frameworks';
+import type { Framework, HookType, Niche, Platform, ScriptLength, Tone, ContentObjective, UniversalPillar } from '@/lib/viral-frameworks';
 import type { HumanizerConfig } from '@/lib/humanizer';
 
 export interface GeneratedHook {
@@ -19,6 +19,8 @@ export interface WizardState {
   tema: string;
   hookType: HookType;
   hookTypeIsAuto: boolean;
+  contentObjective: ContentObjective;
+  universalPillar: UniversalPillar;
   // Step 2 config
   platform: Platform;
   tone: Tone;

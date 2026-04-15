@@ -8,8 +8,24 @@ import {
   HOOK_TEMPLATES,
   CTA_TEMPLATES,
   FRAMEWORK_STRUCTURES,
+  type ContentObjective,
+  type UniversalPillar,
 } from './viral-frameworks';
 import { HumanizerConfig, getHumanizerSystemPrompt } from './humanizer';
+
+const OBJECTIVE_INSTRUCTIONS: Record<ContentObjective, string> = {
+  alcance: 'OBJETIVO S1 — ALCANCE: Este video debe ser ultra-compartible. Diseña el gancho y guión para que gente que NO te sigue lo comparta. Prioriza impacto emocional o controversia sana sobre profundidad.',
+  educativo: 'OBJETIVO S2 — EDUCATIVO: Este video debe enseñar algo valioso y accionable. El espectador debe querer guardarlo. Estructura clara con pasos o revelaciones. Optimiza para watch time alto y saves.',
+  conexion: 'OBJETIVO S3 — CONEXIÓN: Este video debe crear comunidad. El espectador debe sentir "esto me pasa a mí también". Usa vulnerabilidad, historias y momentos de identificación. Optimiza para comentarios y DMs.',
+  autoridad: 'OBJETIVO S4 — AUTORIDAD: Este video debe posicionarte como experto. Incluye datos concretos, experiencias reales y pruebas. El espectador debe quedar con ganas de seguirte y confiar en ti. Optimiza para follows.',
+};
+
+const PILLAR_INSTRUCTIONS: Record<UniversalPillar, string> = {
+  dinero: 'PILAR UNIVERSAL — DINERO: Conecta el tema con el deseo de ganar, ahorrar o multiplicar dinero. El espectador debe sentir que este video puede mejorar su situación económica.',
+  relaciones: 'PILAR UNIVERSAL — RELACIONES: Conecta el tema con el deseo de sentirse querido, entendido, acompañado o con mejores vínculos. El espectador debe sentirse visto y comprendido.',
+  estatus: 'PILAR UNIVERSAL — ESTATUS: Conecta el tema con el deseo de ser respetado, reconocido y admirado. El espectador debe sentir que este contenido lo hace ver mejor o más inteligente ante los demás.',
+  salud: 'PILAR UNIVERSAL — SALUD: Conecta el tema con el deseo de sentirse bien, tener más energía y vivir con mayor calidad. El espectador debe sentir que su bienestar depende de lo que van a aprender.',
+};
 
 export function buildScriptPrompt(config: ScriptConfig, humanizer: HumanizerConfig): string {
   const duration = DURATION_MAP[config.platform][config.length];
@@ -44,6 +60,8 @@ TONO: ${config.tone}
 NICHO: ${config.niche}
 ${config.audiencia_objetivo ? `AUDIENCIA: ${config.audiencia_objetivo}` : ''}
 ${config.contexto_adicional ? `CONTEXTO EXTRA: ${config.contexto_adicional}` : ''}
+${config.contentObjective ? `\n${OBJECTIVE_INSTRUCTIONS[config.contentObjective]}` : ''}
+${config.universalPillar ? `\n${PILLAR_INSTRUCTIONS[config.universalPillar]}` : ''}
 
 ESTRUCTURA DEL FRAMEWORK (${config.framework}):
 ${framework.pasos.map((p, i) => `${i + 1}. ${p}`).join('\n')}
@@ -101,6 +119,8 @@ TIPO: ${config.hookType}
 PLATAFORMA: ${config.platform.replace('_', ' ')}
 TONO: ${config.tone}
 NICHO: ${config.niche}
+${config.contentObjective ? `\n${OBJECTIVE_INSTRUCTIONS[config.contentObjective]}` : ''}
+${config.universalPillar ? `\n${PILLAR_INSTRUCTIONS[config.universalPillar]}` : ''}
 
 EJEMPLOS DE REFERENCIA (inspírate, crea variaciones ORIGINALES):
   - ${hookExamples}

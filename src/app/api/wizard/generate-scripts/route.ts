@@ -5,7 +5,7 @@ export const maxDuration = 60;
 import { generateWithAI } from '@/lib/ai-client';
 import { postProcessHumanize, type HumanizerConfig } from '@/lib/humanizer';
 import { buildScriptPrompt } from '@/lib/prompt-builder';
-import type { Framework, HookType, Niche, Platform, ScriptLength, Tone } from '@/lib/viral-frameworks';
+import type { Framework, HookType, Niche, Platform, ScriptLength, Tone, ContentObjective, UniversalPillar } from '@/lib/viral-frameworks';
 import { getServerSupabase } from '@/lib/supabase';
 import { buildStyleContext, loadUserStyle } from '@/lib/style-profile';
 
@@ -23,6 +23,8 @@ interface Body {
   humanizer: HumanizerConfig;
   useMyStyle?: boolean;
   incluirCta?: boolean;
+  contentObjective?: ContentObjective;
+  universalPillar?: UniversalPillar;
 }
 
 export async function POST(request: NextRequest) {
@@ -59,6 +61,8 @@ export async function POST(request: NextRequest) {
           contexto_adicional: `Usa EXACTAMENTE este gancho como arranque del guión: "${body.hookText}". ${body.contexto || ''}`,
           audiencia_objetivo: body.audiencia,
           incluir_cta: body.incluirCta ?? true,
+          contentObjective: body.contentObjective,
+          universalPillar: body.universalPillar,
         },
         body.humanizer
       );

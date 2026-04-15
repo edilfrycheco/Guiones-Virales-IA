@@ -16,6 +16,8 @@ const DEFAULT_STATE: WizardState = {
   tema: '',
   hookType: 'curiosidad',
   hookTypeIsAuto: true,
+  contentObjective: 'alcance',
+  universalPillar: 'dinero',
   platform: 'instagram',
   tone: 'casual',
   niche: 'otro',

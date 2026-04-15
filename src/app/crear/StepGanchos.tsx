@@ -45,6 +45,8 @@ export default function StepGanchos({ state, update, onNext, onBack }: Props) {
           cantidad: state.cantidad,
           humanizer: state.humanizer,
           useMyStyle: state.useMyStyle,
+          contentObjective: state.contentObjective,
+          universalPillar: state.universalPillar,
         }),
       });
       const data = await res.json();

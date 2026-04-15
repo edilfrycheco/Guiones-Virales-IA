@@ -125,6 +125,8 @@ export default function StepGuiones({ state, update, onNext, onBack }: Props) {
           humanizer: state.humanizer,
           useMyStyle: state.useMyStyle,
           incluirCta: state.incluirCta,
+          contentObjective: state.contentObjective,
+          universalPillar: state.universalPillar,
         }),
       });
       const data = await res.json();
