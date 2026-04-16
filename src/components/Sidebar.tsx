@@ -11,12 +11,14 @@ import {
   ChevronRight,
   Flame,
   Layers,
+  BookOpen,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/', label: 'Dashboard', icon: Flame, description: 'Vista general' },
   { href: '/crear', label: 'Crear Guión', icon: Layers, description: 'Flujo guiado IA' },
   { href: '/analyzer', label: 'Analizador', icon: BarChart3, description: 'Evaluar guiones' },
+  { href: '/referentes', label: 'Referentes', icon: BookOpen, description: 'Guiones ganadores' },
   { href: '/templates', label: 'Plantillas', icon: BookTemplate, description: 'Frameworks' },
 ];
 

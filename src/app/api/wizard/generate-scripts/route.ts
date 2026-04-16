@@ -25,6 +25,7 @@ interface Body {
   incluirCta?: boolean;
   contentObjective?: ContentObjective;
   universalPillar?: UniversalPillar;
+  useReferentes?: boolean;
 }
 
 export async function POST(request: NextRequest) {
@@ -32,6 +33,48 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as Body;
     if (!body.tema || !body.frameworks?.length) {
       return NextResponse.json({ error: 'Faltan datos requeridos' }, { status: 400 });
+    }
+
+    // Inyección de guiones referentes (guiones ganadores del usuario)
+    let referentesContext = '';
+    if (body.useReferentes) {
+      try {
+        const supabase = getServerSupabase();
+        if (supabase) {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: refScripts } = await supabase
+              .from('reference_scripts')
+              .select('topic, script_content, hook_type, framework, style_analysis, creator_name')
+              .eq('user_id', user.id)
+              .order('created_at', { ascending: false })
+              .limit(3);
+
+            if (refScripts && refScripts.length > 0) {
+              const parts = refScripts.map((r: any, i: number) => {
+                const analysis = r.style_analysis;
+                return `--- GUIÓN REFERENTE ${i + 1}${r.creator_name ? ` (${r.creator_name})` : ''} — Tema: ${r.topic} ---
+${analysis?.hook_pattern ? `Técnica del gancho: ${analysis.hook_pattern}` : ''}
+${analysis?.why_it_works ? `Por qué funciona: ${analysis.why_it_works}` : ''}
+${analysis?.engagement_triggers?.length ? `Triggers: ${analysis.engagement_triggers.join(', ')}` : ''}
+
+GUIÓN:
+${r.script_content}
+--- fin referente ${i + 1} ---`;
+              });
+
+              referentesContext = `
+=== GUIONES REFERENTES — INSPÍRATE EN SU ESTILO Y ESTRUCTURA (NO LOS COPIES) ===
+Estos guiones han tenido alto engagement. Estudia CÓMO abren, cómo generan curiosidad, qué tipo de frases usan y cómo cierran. Adapta esas técnicas a tu guión sin copiar frases literales.
+
+${parts.join('\n\n')}
+=== FIN DE REFERENTES ===`;
+            }
+          }
+        }
+      } catch {
+        // Non-fatal — generate without referentes context
+      }
     }
 
     // Inyección de estilo si el usuario la activó
@@ -67,10 +110,15 @@ export async function POST(request: NextRequest) {
         body.humanizer
       );
 
+      // Combine style context + referentes context
+      const combinedContext = [styleContext, referentesContext]
+        .filter(Boolean)
+        .join('\n\n') || undefined;
+
       const result = await generateWithAI(
         'Eres un guionista experto en contenido viral. SOLO devuelve el guión, sin explicaciones.',
         prompt,
-        styleContext
+        combinedContext
       );
 
       return {

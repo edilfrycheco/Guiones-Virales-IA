@@ -78,6 +78,27 @@ export interface SavedScript {
   created_at: string;
 }
 
+export interface ReferenceScript {
+  id: string;
+  user_id: string;
+  creator_name: string | null;
+  platform: string;
+  topic: string;
+  niche: string | null;
+  estimated_views: number | null;
+  script_content: string;
+  hook_type: string | null;
+  framework: string | null;
+  style_analysis: {
+    hook_pattern: string;
+    key_phrases: string[];
+    why_it_works: string;
+    tone: string;
+    engagement_triggers: string[];
+  } | null;
+  created_at: string;
+}
+
 export interface StyleProfile {
   id: string;
   user_id: string;

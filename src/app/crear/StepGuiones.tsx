@@ -69,6 +69,16 @@ export default function StepGuiones({ state, update, onNext, onBack }: Props) {
   const [error, setError] = useState('');
   const [showConfig, setShowConfig] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  const [useReferentes, setUseReferentes] = useState(false);
+  const [referentesCount, setReferentesCount] = useState<number | null>(null);
+
+  // Check how many reference scripts the user has
+  useEffect(() => {
+    fetch('/api/reference-scripts')
+      .then((r) => r.json())
+      .then((d) => setReferentesCount((d.scripts || []).length))
+      .catch(() => setReferentesCount(0));
+  }, []);
 
   // Auto-suggest 3 best frameworks when entering this step
   useEffect(() => {
@@ -127,6 +137,7 @@ export default function StepGuiones({ state, update, onNext, onBack }: Props) {
           incluirCta: state.incluirCta,
           contentObjective: state.contentObjective,
           universalPillar: state.universalPillar,
+          useReferentes,
         }),
       });
       const data = await res.json();
@@ -343,6 +354,36 @@ export default function StepGuiones({ state, update, onNext, onBack }: Props) {
             />
           </div>
         </div>
+
+        {/* Referentes toggle */}
+        {referentesCount !== null && (
+          <div className={`flex items-center justify-between px-4 py-3 rounded-xl border mb-3 ${
+            referentesCount > 0
+              ? 'border-violet-500/20 bg-violet-500/5'
+              : 'border-[#2C2E33] bg-[#25262B]'
+          }`}>
+            <div>
+              <p className="text-sm font-medium text-white">Inspirarme en mis referentes</p>
+              <p className="text-xs text-[#5C5F66]">
+                {referentesCount > 0
+                  ? `${referentesCount} guión${referentesCount !== 1 ? 'es' : ''} ganador${referentesCount !== 1 ? 'es' : ''} disponible${referentesCount !== 1 ? 's' : ''}`
+                  : 'Aún no tienes referentes — añádelos en la sección Referentes'}
+              </p>
+            </div>
+            <div
+              onClick={() => referentesCount > 0 && setUseReferentes(!useReferentes)}
+              className={`w-10 h-5 rounded-full transition-colors relative ${
+                referentesCount > 0 ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'
+              } ${useReferentes && referentesCount > 0 ? 'bg-violet-500' : 'bg-[#2C2E33]'}`}
+            >
+              <div
+                className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform shadow ${
+                  useReferentes && referentesCount > 0 ? 'translate-x-5' : 'translate-x-0.5'
+                }`}
+              />
+            </div>
+          </div>
+        )}
 
         <button
           onClick={generateScripts}
