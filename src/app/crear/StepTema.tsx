@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import type { WizardState } from './types';
 import type { HookType, ContentObjective, UniversalPillar } from '@/lib/viral-frameworks';
 import { HOOK_TEMPLATES } from '@/lib/viral-frameworks';
-import { suggestHookType, suggestNiche, suggestTone, suggestUniversalPillar } from '@/lib/hook-framework-mapper';
+import { suggestContentObjective, suggestHookType, suggestNiche, suggestTone, suggestUniversalPillar } from '@/lib/hook-framework-mapper';
 import {
   HOOK_TYPE_LABELS,
   HOOK_TYPE_DESCRIPTIONS,
@@ -34,13 +34,15 @@ export default function StepTema({ state, update, onNext }: Props) {
     const hookType = forceHookType ?? (state.hookTypeIsAuto ? suggestHookType(tema) : state.hookType);
     const niche = suggestNiche(tema);
     const tone = suggestTone(tema, hookType);
-    const universalPillar = suggestUniversalPillar(niche);
+    const universalPillar = state.universalPillarIsAuto ? suggestUniversalPillar(niche) : state.universalPillar;
+    const contentObjective = state.contentObjectiveIsAuto ? suggestContentObjective(tema, hookType) : state.contentObjective;
     update({
       tema,
       ...(state.hookTypeIsAuto || forceHookType ? { hookType } : {}),
       niche,
       tone,
-      universalPillar,
+      ...(state.universalPillarIsAuto ? { universalPillar } : {}),
+      ...(state.contentObjectiveIsAuto ? { contentObjective } : {}),
     });
   };
 
@@ -111,7 +113,7 @@ export default function StepTema({ state, update, onNext }: Props) {
                 return (
                   <button
                     key={obj}
-                    onClick={() => update({ contentObjective: obj })}
+                    onClick={() => update({ contentObjective: obj, contentObjectiveIsAuto: false })}
                     className={`text-left p-3 rounded-xl border transition-all ${
                       isSelected
                         ? 'border-[#5c7cfa] bg-[#5c7cfa]/10'
@@ -127,7 +129,12 @@ export default function StepTema({ state, update, onNext }: Props) {
                       >
                         {label}
                       </span>
-                      {isSelected && (
+                      {isSelected && state.contentObjectiveIsAuto && (
+                        <span className="ml-auto text-[10px] bg-[#5c7cfa]/20 text-[#5c7cfa] px-1.5 py-0.5 rounded-full font-medium">
+                          ✨ Auto
+                        </span>
+                      )}
+                      {isSelected && !state.contentObjectiveIsAuto && (
                         <span className="ml-auto text-[#5c7cfa] text-xs font-bold">✓</span>
                       )}
                     </div>
@@ -156,7 +163,7 @@ export default function StepTema({ state, update, onNext }: Props) {
                 return (
                   <button
                     key={pillar}
-                    onClick={() => update({ universalPillar: pillar })}
+                    onClick={() => update({ universalPillar: pillar, universalPillarIsAuto: false })}
                     className={`text-left p-3 rounded-xl border transition-all ${
                       isSelected
                         ? 'border-[#5c7cfa] bg-[#5c7cfa]/10'
@@ -171,7 +178,12 @@ export default function StepTema({ state, update, onNext }: Props) {
                       >
                         {label}
                       </span>
-                      {isSelected && (
+                      {isSelected && state.universalPillarIsAuto && (
+                        <span className="ml-auto text-[10px] bg-[#5c7cfa]/20 text-[#5c7cfa] px-1.5 py-0.5 rounded-full font-medium">
+                          ✨ Auto
+                        </span>
+                      )}
+                      {isSelected && !state.universalPillarIsAuto && (
                         <span className="ml-auto text-[#5c7cfa] text-xs font-bold">✓</span>
                       )}
                     </div>

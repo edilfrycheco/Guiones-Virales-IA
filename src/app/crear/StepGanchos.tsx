@@ -49,8 +49,21 @@ export default function StepGanchos({ state, update, onNext, onBack }: Props) {
           universalPillar: state.universalPillar,
         }),
       });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      // Robust response parsing: the API may return a non-JSON HTML error page
+      // on Vercel function timeout (504) or platform errors. Guard the parse
+      // so the user sees a useful message instead of "Unexpected token A".
+      const raw = await res.text();
+      let data: { hooks?: GeneratedHook[]; error?: string } = {};
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        throw new Error(
+          res.status === 504 || !res.ok
+            ? `El servidor tardó demasiado (${res.status}). Intenta de nuevo en un momento.`
+            : 'El servidor devolvió una respuesta inválida. Reintenta.'
+        );
+      }
+      if (!res.ok || data.error) throw new Error(data.error || `Error ${res.status}`);
       update({ generatedHooks: data.hooks || [] });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al generar ganchos');

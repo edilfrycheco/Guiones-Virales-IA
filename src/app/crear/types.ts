@@ -19,8 +19,10 @@ export interface WizardState {
   tema: string;
   hookType: HookType;
   hookTypeIsAuto: boolean;
-  contentObjective: ContentObjective;
-  universalPillar: UniversalPillar;
+  contentObjective: ContentObjective | null;
+  contentObjectiveIsAuto: boolean;
+  universalPillar: UniversalPillar | null;
+  universalPillarIsAuto: boolean;
   // Step 2 config
   platform: Platform;
   tone: Tone;

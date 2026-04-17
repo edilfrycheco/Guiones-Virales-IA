@@ -1,7 +1,7 @@
 // Mapea tipos de gancho → frameworks óptimos
 // Lógica: ciertos ganchos encajan mejor con ciertas estructuras narrativas
 
-import type { Framework, HookType, Niche, Tone, UniversalPillar } from './viral-frameworks';
+import type { ContentObjective, Framework, HookType, Niche, Tone, UniversalPillar } from './viral-frameworks';
 
 // Ranking de compatibilidad hook → framework (score 0-10)
 // Basado en el comportamiento real del gancho: lo que abre mejor se cierra mejor
@@ -239,6 +239,39 @@ export function suggestTone(tema: string, hookType: HookType): Tone {
     return 'inspirador';
   }
   return HOOK_DEFAULT_TONE[hookType];
+}
+
+// Inferencia del objetivo de contenido (S1-S4) a partir del tema y tipo de gancho
+export function suggestContentObjective(tema: string, hookType: HookType): ContentObjective {
+  const t = tema.toLowerCase();
+  // Autoridad: datos, expertise, años de experiencia, números específicos
+  if (
+    hookType === 'dato_sorprendente' ||
+    /\d+\s*(a[ñn]os?|meses?)/i.test(tema) ||
+    /experto/i.test(t) || /estudi[oó]/i.test(t) || /investiga/i.test(t) ||
+    /seg[úu]n/i.test(t) || /llevo \d+/i.test(t)
+  ) {
+    return 'autoridad';
+  }
+  // Conexión: historias, vulnerabilidad, confesiones
+  if (
+    hookType === 'historia' || hookType === 'confesion' ||
+    /me pas[óo]/i.test(t) || /sent[íi]/i.test(t) || /romp[íi]/i.test(t) ||
+    /fracas/i.test(t) || /errores/i.test(t) || /honest/i.test(t) ||
+    /relaciones/i.test(t) || /amor/i.test(t)
+  ) {
+    return 'conexion';
+  }
+  // Educativo: tutoriales, guías, cómo hacer
+  if (
+    /c[oó]mo/i.test(t) || /tutorial/i.test(t) || /paso a paso/i.test(t) ||
+    /gu[íi]a/i.test(t) || /aprend/i.test(t) || /ense[ñn]/i.test(t) ||
+    /truco/i.test(t) || /m[ée]todo/i.test(t) || /t[ée]cnica/i.test(t)
+  ) {
+    return 'educativo';
+  }
+  // Default: alcance (compartibilidad, controversia, impacto)
+  return 'alcance';
 }
 
 // Inferencia de pilar universal a partir del nicho

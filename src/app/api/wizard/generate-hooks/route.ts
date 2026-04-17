@@ -1,7 +1,7 @@
 // Genera N ganchos como array estructurado (para el paso 2 del wizard)
 import { NextRequest, NextResponse } from 'next/server';
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 import { generateWithAI } from '@/lib/ai-client';
 import { getHumanizerSystemPrompt, postProcessHumanize, type HumanizerConfig } from '@/lib/humanizer';
 import { HOOK_TEMPLATES, type HookType, type Platform, type Tone, type Niche, type ContentObjective, type UniversalPillar } from '@/lib/viral-frameworks';
@@ -120,11 +120,11 @@ FORMATO ESTRICTO — SOLO devuelve JSON válido, sin texto extra:
   ]
 }`;
 
-    // Sonnet 4.6 + extended thinking → mejor naturalidad y variedad que Haiku
+    // Sonnet 4.6 + extended thinking (budget moderado para no exceder 60s de Vercel)
     const result = await generateWithAI(systemPrompt, userPrompt, styleContext, {
       model: 'claude-sonnet-4-6',
-      maxTokens: 4096,
-      thinking: { budgetTokens: 2048 },
+      maxTokens: 3072,
+      thinking: { budgetTokens: 1024 },
     });
 
     // Parsea el JSON (con tolerancia a ruido alrededor)
