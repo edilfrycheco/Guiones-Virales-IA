@@ -90,6 +90,13 @@ ${config.incluir_cta ? `🚀 CTA:\n[La llamada a la acción aquí]` : ''}
 💡 NOTAS DE GRABACIÓN:
 [2-3 tips sobre cómo grabar este guión: tono de voz, ritmo, gestos]
 
+INGENIERÍA DE RETENCIÓN (CRÍTICO — esto define si el video escala):
+- MICRO-CURIOSITY STACKING: cada 5-7 segundos abre un NUEVO open-loop antes de cerrar el anterior. Nunca dejes al espectador sin una pregunta pendiente.
+- PATTERN INTERRUPTS: cada 8-12 segundos cambia algo (tono, ritmo, ángulo, una frase corta tipo "espera —", "y lo más loco es", "pero esto no es lo peor")
+- DELAYED PAYOFF: la información valiosa principal NO se entrega en los primeros 10s; se entrega en el 60-75% del guión, cuando el espectador ya invirtió tiempo
+- LOOP-BACK opcional al final: cierra con una frase que invite a re-ver el inicio (solo si encaja con el tema)
+- EVITA "ahora te voy a explicar" o "primero", "segundo", "tercero" — esos cierran loops anticipadamente
+
 IMPORTANTE:
 - El guión debe sonar como si un creador REAL lo estuviera diciendo de forma natural
 - NO uses lenguaje corporativo ni de comunicado de prensa
@@ -141,7 +148,7 @@ FORMATO: Devuelve cada gancho numerado, seguido de una breve nota sobre por qué
 }
 
 export function buildAnalysisPrompt(script: string): string {
-  return `Eres un analista experto en contenido viral para redes sociales. Evalúa el siguiente guión y dale una puntuación detallada.
+  return `Eres un analista experto en contenido viral para redes sociales. Evalúa el siguiente guión con foco en retención segundo-a-segundo.
 
 GUIÓN A ANALIZAR:
 ---
@@ -151,12 +158,18 @@ ${script}
 EVALÚA en estas categorías (0-100 cada una):
 
 1. **GANCHO** (0-100): ¿Los primeros 2-3 segundos detienen el scroll? ¿Hay gap de curiosidad?
-2. **RETENCIÓN** (0-100): ¿Hay micro-ganchos? ¿Open loops? ¿Ritmo variado? ¿Mantendrá al espectador hasta el final?
+2. **RETENCIÓN** (0-100): ¿Hay micro-ganchos cada 5-7s? ¿Open loops apilados? ¿Pattern interrupts? ¿Mantendrá al espectador hasta el final?
 3. **ESTRUCTURA** (0-100): ¿Sigue un framework claro? ¿La progresión es lógica y fluida?
 4. **VALOR** (0-100): ¿Entrega valor real? ¿Es accionable o memorable?
 5. **CTA** (0-100): ¿Hay llamada a la acción? ¿Es natural y motivante?
 6. **NATURALIDAD** (0-100): ¿Suena humano? ¿O suena a IA/corporativo? Evalúa muletillas, imperfecciones, ritmo.
 7. **VIRALIDAD** (0-100): ¿Tiene potencial de ser compartido? ¿Genera emoción/reacción?
+
+ANÁLISIS DE RETENCIÓN (CRÍTICO):
+- Divide el guión mentalmente en bloques aproximados de 5 segundos
+- Para cada bloque, estima la curva de retención esperada (% que sigue viendo)
+- Identifica los puntos de drop-off probable (donde la gente saltaría al siguiente video)
+- Detecta dónde está el payoff principal (% del guión)
 
 FORMATO DE RESPUESTA (JSON):
 {
@@ -167,9 +180,16 @@ FORMATO DE RESPUESTA (JSON):
       "puntuacion": [0-100],
       "feedback": "[qué hace bien]",
       "mejora": "[qué podría mejorar]"
-    },
-    ...
+    }
   ],
+  "retencion_breakdown": [
+    { "segmento": "0-5s", "retencion_esperada": [0-100], "fragmento": "[primeras palabras]", "nota": "[qué pasa aquí]" },
+    { "segmento": "5-10s", "retencion_esperada": [0-100], "fragmento": "...", "nota": "..." }
+  ],
+  "drop_off_risks": ["punto débil 1 con timestamp aproximado", "punto débil 2"],
+  "payoff_location_pct": [0-100, % del guión donde está el payoff principal],
+  "open_loops_detected": [número de open loops apilados],
+  "pattern_interrupts_detected": [número de pattern interrupts],
   "veredicto": "[1-2 frases resumen del guión]",
   "mejoras_top_3": ["mejora 1", "mejora 2", "mejora 3"]
 }`;
@@ -183,7 +203,15 @@ function getPlatformInstructions(platform: string): string {
 - Usa lenguaje que invite a guardar y compartir
 - Piensa en formato vertical 9:16
 - Los subtítulos son ESENCIALES (80% ve sin sonido)
-- Ritmo: energía media-alta, pausas estratégicas`,
+- Ritmo: energía media-alta, pausas estratégicas
+
+ESTRUCTURA TEMPORAL (Reels):
+[0-2s]  HOOK visual + verbal — detén el scroll con curiosidad o promesa
+[2-5s]  PROMESA — qué van a aprender/sentir si se quedan
+[5-15s] LOOP #1 — abre una curiosidad y NO la cierres aún
+[15-25s] PAYOFF parcial + LOOP #2 — entrega algo de valor pero abre otra pregunta
+[25-40s] PAYOFF principal + tensión final
+[últimos 3-5s] CIERRE + CTA en formato pregunta o reto`,
 
     tiktok: `INSTRUCCIONES PARA TIKTOK:
 - Gancho en los primeros 1.5-2 segundos (más rápido que Instagram)
@@ -191,14 +219,30 @@ function getPlatformInstructions(platform: string): string {
 - Más informal, más raw, menos producido
 - Puedes ser más directo y provocativo
 - Formato nativo: como si estuvieras hablando a un amigo
-- Trending sounds boostan 300-500% el alcance en 24h`,
+- Trending sounds boostan 300-500% el alcance en 24h
+
+ESTRUCTURA TEMPORAL (TikTok):
+[0-1.5s] HOOK — frase punchy o pattern interrupt visual
+[1.5-4s] CONTEXTO ultra-rápido — sitúa al espectador
+[4-12s] LOOP #1 abierto — promesa de pago (revelación, dato, twist)
+[12-22s] MINI-PAYOFF + LOOP #2 — entrega algo, abre otra cosa
+[22-35s] PAYOFF principal — el momento "ohh"
+[últimos 3s] LOOP-BACK al inicio o CTA conversacional`,
 
     youtube_shorts: `INSTRUCCIONES PARA YOUTUBE SHORTS:
 - Gancho en los primeros 2-3 segundos
 - Puede ser ligeramente más informativo que TikTok
 - La estructura importa más (YouTube premia watch time)
 - Cierra con algo que motive a ver más de tu canal
-- Máximo 58 segundos, sweet spot: 30-45 segundos`,
+- Máximo 58 segundos, sweet spot: 30-45 segundos
+
+ESTRUCTURA TEMPORAL (Shorts):
+[0-3s]  HOOK — declaración fuerte o pregunta directa
+[3-8s]  PREMISA — anuncia explícitamente qué van a aprender
+[8-20s] LOOP #1 — desarrollo con cliffhanger antes del primer payoff
+[20-35s] PAYOFF #1 + LOOP #2 hacia idea más grande
+[35-50s] PAYOFF principal + síntesis
+[últimos 5-8s] CTA al canal (ver más, suscribirse, video relacionado)`,
   };
   return instructions[platform] || instructions.instagram;
 }

@@ -57,6 +57,10 @@ export async function POST(request: NextRequest) {
 ${analysis?.hook_pattern ? `Técnica del gancho: ${analysis.hook_pattern}` : ''}
 ${analysis?.why_it_works ? `Por qué funciona: ${analysis.why_it_works}` : ''}
 ${analysis?.engagement_triggers?.length ? `Triggers: ${analysis.engagement_triggers.join(', ')}` : ''}
+${analysis?.retention_mechanisms?.length ? `Mecanismos de retención: ${analysis.retention_mechanisms.join(', ')}` : ''}
+${analysis?.loop_timing ? `Timing de loops: ${analysis.loop_timing}` : ''}
+${analysis?.payoff_moment ? `Momento de payoff: ${analysis.payoff_moment}` : ''}
+${analysis?.pattern_interrupts?.length ? `Pattern interrupts: ${analysis.pattern_interrupts.join(', ')}` : ''}
 
 GUIÓN:
 ${r.script_content}
@@ -115,10 +119,12 @@ ${parts.join('\n\n')}
         .filter(Boolean)
         .join('\n\n') || undefined;
 
+      // Sonnet 4.6 + 4096 tokens → evita que se corten guiones largos (Shorts 50s)
       const result = await generateWithAI(
         'Eres un guionista experto en contenido viral. SOLO devuelve el guión, sin explicaciones.',
         prompt,
-        combinedContext
+        combinedContext,
+        { model: 'claude-sonnet-4-6', maxTokens: 4096 }
       );
 
       return {

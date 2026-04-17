@@ -11,7 +11,7 @@ import { getServerSupabase } from '@/lib/supabase';
 // Analysis prompt
 // ---------------------------------------------------------------------------
 function buildReferenceAnalysisPrompt(script: string): string {
-  return `Analiza el siguiente guión de un video ganador en redes sociales. Extrae los patrones que lo hacen efectivo.
+  return `Analiza el siguiente guión de un video ganador en redes sociales. Extrae los patrones que lo hacen efectivo, con foco especial en MECANISMOS DE RETENCIÓN.
 
 GUIÓN:
 ---
@@ -26,7 +26,11 @@ Responde SOLO con JSON válido:
   "key_phrases": ["frase memorable 1", "frase memorable 2", "frase memorable 3"],
   "why_it_works": "1-2 oraciones explicando la psicología detrás de su efectividad",
   "tone": "casual / energético / serio / inspirador / humorístico / educativo",
-  "engagement_triggers": ["trigger psicológico 1", "trigger 2", "trigger 3"]
+  "engagement_triggers": ["trigger psicológico 1", "trigger 2", "trigger 3"],
+  "retention_mechanisms": ["mecanismo concreto 1 (open loop, cliffhanger, reveal delay, etc.)", "mecanismo 2", "mecanismo 3"],
+  "loop_timing": "Describe en 1 frase CADA CUÁNTOS segundos abre nuevos loops (ej: 'abre un loop cada 6-8s y los cierra en cascada')",
+  "payoff_moment": "En qué punto del guión entrega el valor principal (inicio / medio / 60-75% / final) y por qué ahí",
+  "pattern_interrupts": ["interrupt 1 con frase aproximada", "interrupt 2"]
 }`;
 }
 
@@ -104,6 +108,10 @@ export async function POST(request: NextRequest) {
           why_it_works: parsed.why_it_works || '',
           tone: parsed.tone || '',
           engagement_triggers: parsed.engagement_triggers || [],
+          retention_mechanisms: parsed.retention_mechanisms || [],
+          loop_timing: parsed.loop_timing || '',
+          payoff_moment: parsed.payoff_moment || '',
+          pattern_interrupts: parsed.pattern_interrupts || [],
         };
       }
     } catch {

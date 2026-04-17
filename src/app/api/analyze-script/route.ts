@@ -18,9 +18,16 @@ export async function POST(request: NextRequest) {
 
     const fullPrompt = buildAnalysisPrompt(script);
 
+    // Sonnet 4.6 + extended thinking → análisis más profundo y estructurado
     const result = await generateWithAI(
       'Eres un analista experto en contenido viral. Responde SOLO con JSON válido, sin texto adicional.',
-      fullPrompt
+      fullPrompt,
+      undefined,
+      {
+        model: 'claude-sonnet-4-6',
+        maxTokens: 8192,
+        thinking: { budgetTokens: 5000 },
+      }
     );
 
     // Intentar parsear JSON de la respuesta

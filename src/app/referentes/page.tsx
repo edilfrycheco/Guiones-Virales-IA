@@ -301,6 +301,47 @@ function ScriptCard({
                 </div>
               )}
 
+              {analysis.retention_mechanisms && analysis.retention_mechanisms.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-[#909296] mb-1.5">Mecanismos de retención</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {analysis.retention_mechanisms.map((m, i) => (
+                      <span key={i} className="text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 px-2 py-1 rounded-lg">
+                        {m}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(analysis.loop_timing || analysis.payoff_moment) && (
+                <div className="grid grid-cols-2 gap-3">
+                  {analysis.loop_timing && (
+                    <div>
+                      <p className="text-xs font-semibold text-[#909296] mb-1">Timing de loops</p>
+                      <p className="text-xs text-[#C1C2C5]">{analysis.loop_timing}</p>
+                    </div>
+                  )}
+                  {analysis.payoff_moment && (
+                    <div>
+                      <p className="text-xs font-semibold text-[#909296] mb-1">Momento de payoff</p>
+                      <p className="text-xs text-[#C1C2C5]">{analysis.payoff_moment}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {analysis.pattern_interrupts && analysis.pattern_interrupts.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-[#909296] mb-1.5">Pattern interrupts</p>
+                  <div className="space-y-1">
+                    {analysis.pattern_interrupts.map((p, i) => (
+                      <p key={i} className="text-xs text-amber-300 italic">"{p}"</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {analysis.key_phrases?.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-[#909296] mb-1.5">Frases clave</p>

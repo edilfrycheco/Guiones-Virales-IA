@@ -95,6 +95,10 @@ export interface ReferenceScript {
     why_it_works: string;
     tone: string;
     engagement_triggers: string[];
+    retention_mechanisms?: string[];
+    loop_timing?: string;
+    payoff_moment?: string;
+    pattern_interrupts?: string[];
   } | null;
   created_at: string;
 }

@@ -93,7 +93,12 @@ FORMATO ESTRICTO — SOLO devuelve JSON válido, sin texto extra:
   ]
 }`;
 
-    const result = await generateWithAI(systemPrompt, userPrompt, styleContext);
+    // Haiku 4.5 + extended thinking → rápido y creativo para ganchos
+    const result = await generateWithAI(systemPrompt, userPrompt, styleContext, {
+      model: 'claude-haiku-4-5-20251001',
+      maxTokens: 4096,
+      thinking: { budgetTokens: 2048 },
+    });
 
     // Parsea el JSON (con tolerancia a ruido alrededor)
     let hooks: Array<{ text: string; reason: string }> = [];
