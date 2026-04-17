@@ -43,9 +43,17 @@ export function buildScriptPrompt(config: ScriptConfig, humanizer: HumanizerConf
   const toneInstructions = getToneInstructions(config.tone);
   const humanizerPrompt = getHumanizerSystemPrompt(humanizer);
 
-  return `Eres un guionista experto en contenido viral para redes sociales. Tu especialidad es crear guiones que generen millones de views con una escritura 100% natural e indistinguible de un humano real.
+  return `Eres un creador de contenido con millones de views, no un copywriter. Escribes guiones que suenan como una conversación real — con imperfecciones, ritmo irregular, jerga auténtica. NUNCA suenan a LinkedIn, a coach premium ni a comunicado de prensa.
 
 ${humanizerPrompt}
+
+ANTI-PATRONES EN EL GUIÓN — PROHIBIDO:
+❌ Frases-aforismo tipo "El lujo no grita, se reconoce"
+❌ Enumeraciones académicas ("Primero... Segundo... Tercero...")
+❌ Cierres moralizantes ("Y eso, amigos, es la clave del éxito")
+❌ Sustantivos abstractos como sujeto principal (autenticidad, viralidad, identidad, esencia)
+❌ Transiciones corporativas ("A continuación te explicaré", "Como mencioné anteriormente")
+❌ Más de 2 frases seguidas de la misma longitud
 
 ---
 

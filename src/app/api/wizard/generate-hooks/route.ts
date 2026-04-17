@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const systemPrompt = `Eres un experto en ganchos virales. Detienes el scroll en 2 segundos.
+    const systemPrompt = `Eres un creador de contenido viral con +5M seguidores. Escribes ganchos que suenan como una persona real hablando — no como un copy de LinkedIn ni un aforismo de coach.
 
 ${humanPrompt}`;
 
@@ -62,40 +62,67 @@ ${humanPrompt}`;
     const pillarMap: Record<string, string> = {
       dinero: 'DINERO — activa el deseo de mejorar la situación económica',
       relaciones: 'RELACIONES — activa el deseo de conexión humana y pertenencia',
-      estatus: 'ESTATUS — activa el deseo de ser respetado y reconocido',
+      estatus: 'ESTATUS — activa el deseo de ser respectado y reconocido',
       salud: 'SALUD — activa el deseo de bienestar y energía',
     };
 
-    const userPrompt = `Genera EXACTAMENTE ${cantidad} ganchos virales diferentes para:
+    const userPrompt = `Genera EXACTAMENTE ${cantidad} ganchos virales para este tema. Cada uno debe sonar como si una persona real lo dijera mirando a cámara, no como una frase de LinkedIn.
 
 TEMA: ${body.tema}
-TIPO: ${body.hookType}
+TIPO DE GANCHO: ${body.hookType}
 PLATAFORMA: ${body.platform}
 TONO: ${body.tone}
 NICHO: ${body.niche}
 ${body.contentObjective ? `OBJETIVO DEL VIDEO: ${objectiveMap[body.contentObjective]}` : ''}
 ${body.universalPillar ? `PILAR UNIVERSAL: ${pillarMap[body.universalPillar]}` : ''}
 
-EJEMPLOS (inspírate, crea variaciones ORIGINALES):
-  - ${hookRef}
+═══ ANTI-PATRONES — PROHIBIDO usar cualquiera de estos ═══
+❌ Estructura "X. No Y, Z." repetida más de una vez en la lista
+❌ Ecuaciones tipo "X = Y" o "X = commoditized"
+❌ Cierres con "Elige" o "De qué lado estás" o "Una de dos"
+❌ Sustantivos abstractos como SUJETO del gancho (viralidad, identidad, autenticidad, jerarquía, código visual, esencia, propósito)
+❌ Frases-aforismo estilo consultor o coach premium ("El lujo no grita, se reconoce")
+❌ Más de UN gancho que use contraste "X% vs Y%"
+❌ Todos los ganchos con la misma longitud de frase
+❌ Empezar más de 2 ganchos con la misma palabra
 
-REGLAS:
-- Máximo 10-15 palabras por gancho
-- Cada uno debe abrir un "gap de curiosidad"
-- Sonido natural, no corporativo
-- Varía estructuras entre ellos
+═══ REQUISITO DE CONCRETITUD ═══
+Cada gancho DEBE incluir al menos UNO de estos anclajes concretos:
+• Un número real específico (no "millones" — sí "4.200" o "3 años" o "8 meses")
+• Un nombre propio real (marca conocida, persona pública, plataforma, ciudad)
+• Una acción física del narrador ("abrí", "vi", "borré", "dije", "revisé", "cerré")
+• Una reacción emocional específica del narrador ("me rompió los esquemas", "no lo podía creer", "casi cierro todo")
+• Una escena que se pueda visualizar en 2 segundos ("mirando mi teléfono a las 2am", "en la primera reunión con ese cliente")
+
+═══ VARIEDAD OBLIGATORIA DE ESTRUCTURAS ═══
+Distribuye estas estructuras entre los ${cantidad} ganchos (no repitas la misma más de 2 veces):
+→ "Yo [acción pasada inesperada]..." — narrador en primera persona
+→ "[Pregunta directa al espectador que lo incomoda]"
+→ "[Afirmación que choca] — [contexto que la explica]"
+→ "[Nombre de marca o persona real] [hace/dijo algo inesperado]. [Consecuencia que nadie menciona]."
+→ "[Escena concreta en medio de la acción, in-medias-res]"
+→ "Mira / Fíjate / Espera — [revelación inmediata]"
+→ "[Dato concreto que contradice lo que el espectador cree]"
+
+═══ VIBRA CORRECTA — así deben sonar ═══
+✅ "Hay una razón por la que Hermès no tiene cuenta en TikTok — y cuando la entiendes, cambia todo."
+✅ "Yo cerré mi cuenta con 50K seguidores en enero. En febrero vendí más que nunca."
+✅ "¿Notaste que los relojes de lujo nunca muestran el precio en Instagram? Eso no es un accidente."
+✅ "Llevaba 2 años creando contenido. Mis métricas eran perfectas. El problema: cero ventas."
+✅ "Mira tu feed ahora mismo. Todo se parece, ¿verdad? El tuyo también."
+✅ "El cliente que más me pagó me dijo que nunca había visto mi contenido. Eso me dejó mudo."
 
 FORMATO ESTRICTO — SOLO devuelve JSON válido, sin texto extra:
 {
   "hooks": [
-    { "text": "gancho 1", "reason": "por qué funciona en 1 frase" },
+    { "text": "gancho 1", "reason": "en 1 frase natural: qué abre en la cabeza del espectador" },
     { "text": "gancho 2", "reason": "..." }
   ]
 }`;
 
-    // Haiku 4.5 + extended thinking → rápido y creativo para ganchos
+    // Sonnet 4.6 + extended thinking → mejor naturalidad y variedad que Haiku
     const result = await generateWithAI(systemPrompt, userPrompt, styleContext, {
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-6',
       maxTokens: 4096,
       thinking: { budgetTokens: 2048 },
     });
