@@ -30,6 +30,7 @@ export default function PerfilPage() {
 
   const handleSave = () => {
     saveProfile(form);
+    try { localStorage.removeItem('wizard_state_v1'); } catch {}
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
@@ -139,7 +140,7 @@ export default function PerfilPage() {
             {saved ? (
               <>
                 <CheckCircle2 size={18} />
-                Guardado
+                Guardado — tu próximo guión usará estos defaults
               </>
             ) : (
               'Guardar perfil'
