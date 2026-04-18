@@ -3,33 +3,12 @@
 import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { loadProfile, saveProfile, type UserProfile } from '@/lib/user-profile';
+import { NICHE_LABELS, PLATFORM_LABELS, TONE_LABELS } from '@/app/crear/constants';
 import { CheckCircle2, User } from 'lucide-react';
 
-const NICHE_OPTIONS = [
-  { value: 'marketing', label: 'Marketing' },
-  { value: 'negocios', label: 'Negocios' },
-  { value: 'finanzas', label: 'Finanzas' },
-  { value: 'desarrollo_personal', label: 'Desarrollo personal' },
-  { value: 'fitness', label: 'Fitness & Salud' },
-  { value: 'tecnologia', label: 'Tecnología' },
-  { value: 'educacion', label: 'Educación' },
-  { value: 'lifestyle', label: 'Lifestyle' },
-  { value: 'otro', label: 'Otro' },
-];
-
-const PLATFORM_OPTIONS = [
-  { value: 'instagram', label: 'Instagram' },
-  { value: 'tiktok', label: 'TikTok' },
-  { value: 'youtube', label: 'YouTube' },
-];
-
-const TONE_OPTIONS = [
-  { value: 'casual', label: 'Casual' },
-  { value: 'profesional', label: 'Profesional' },
-  { value: 'energico', label: 'Enérgico' },
-  { value: 'serio', label: 'Serio' },
-  { value: 'humoristico', label: 'Humorístico' },
-];
+const NICHE_OPTIONS = Object.entries(NICHE_LABELS).map(([value, label]) => ({ value, label }));
+const PLATFORM_OPTIONS = Object.entries(PLATFORM_LABELS).map(([value, label]) => ({ value, label }));
+const TONE_OPTIONS = Object.entries(TONE_LABELS).map(([value, label]) => ({ value, label }));
 
 const EMPTY: UserProfile = {
   audiencia_objetivo: '',
