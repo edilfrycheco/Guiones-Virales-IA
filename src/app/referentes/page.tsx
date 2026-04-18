@@ -48,8 +48,16 @@ function AddScriptForm({ onAdded }: { onAdded: (s: ReferenceScript) => void }) {
           estimated_views: form.estimated_views ? Number(form.estimated_views) : undefined,
         }),
       });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
+      const raw = await res.text();
+      let data: Record<string, unknown> = {};
+      try { data = JSON.parse(raw); } catch {
+        throw new Error(
+          res.status === 504
+            ? 'El servidor tardó demasiado. Intenta de nuevo.'
+            : 'Respuesta inválida del servidor. Reintenta.'
+        );
+      }
+      if (data.error) throw new Error(data.error as string);
       onAdded(data.script);
       setForm({ creator_name: '', topic: '', platform: 'instagram', niche: '', estimated_views: '', script_content: '' });
       setOpen(false);

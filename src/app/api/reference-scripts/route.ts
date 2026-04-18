@@ -2,7 +2,7 @@
 // POST — save a new reference script + auto-analyze it with Claude
 import { NextRequest, NextResponse } from 'next/server';
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 import { generateWithAI } from '@/lib/ai-client';
 import { getServerSupabase } from '@/lib/supabase';
@@ -95,7 +95,9 @@ export async function POST(request: NextRequest) {
     try {
       const result = await generateWithAI(
         'Eres un analista experto en contenido viral. Responde SOLO con JSON válido.',
-        buildReferenceAnalysisPrompt(script_content)
+        buildReferenceAnalysisPrompt(script_content),
+        undefined,
+        { model: 'claude-sonnet-4-6', maxTokens: 4096 }
       );
       const jsonMatch = result.content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {

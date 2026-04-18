@@ -29,11 +29,6 @@ export async function POST(request: NextRequest) {
     }
 
     const cantidad = Math.max(3, Math.min(10, body.cantidad || 5));
-    const hookRef = HOOK_TEMPLATES[body.hookType]
-      .map((h) => h.replace('{tema}', body.tema))
-      .slice(0, 4)
-      .join('\n  - ');
-
     const humanPrompt = getHumanizerSystemPrompt(body.humanizer);
 
     // Inyección de estilo del usuario (opcional)
@@ -66,7 +61,7 @@ ${humanPrompt}`;
       salud: 'SALUD — activa el deseo de bienestar y energía',
     };
 
-    const userPrompt = `Genera EXACTAMENTE ${cantidad} ganchos virales para este tema. Cada uno debe sonar como si una persona real lo dijera mirando a cámara, no como una frase de LinkedIn.
+    const userPrompt = `Genera EXACTAMENTE ${cantidad} ganchos virales para este tema.
 
 TEMA: ${body.tema}
 TIPO DE GANCHO: ${body.hookType}
@@ -76,46 +71,53 @@ NICHO: ${body.niche}
 ${body.contentObjective ? `OBJETIVO DEL VIDEO: ${objectiveMap[body.contentObjective]}` : ''}
 ${body.universalPillar ? `PILAR UNIVERSAL: ${pillarMap[body.universalPillar]}` : ''}
 
-═══ ANTI-PATRONES — PROHIBIDO usar cualquiera de estos ═══
-❌ Estructura "X. No Y, Z." repetida más de una vez en la lista
-❌ Ecuaciones tipo "X = Y" o "X = commoditized"
-❌ Cierres con "Elige" o "De qué lado estás" o "Una de dos"
-❌ Sustantivos abstractos como SUJETO del gancho (viralidad, identidad, autenticidad, jerarquía, código visual, esencia, propósito)
-❌ Frases-aforismo estilo consultor o coach premium ("El lujo no grita, se reconoce")
-❌ Más de UN gancho que use contraste "X% vs Y%"
-❌ Todos los ganchos con la misma longitud de frase
+═══ TU MISIÓN PRINCIPAL ═══
+Cada gancho debe crear una PROMESA IMPLÍCITA. El espectador tiene que pensar: "necesito ver esto hasta el final". Abre un loop mental que su cerebro quiere cerrar. No es publicidad — es la primera frase de una historia que quieren escuchar.
+
+La promesa puede ser: una revelación que cambia algo ("hay una razón que nadie menciona"), una paradoja curiosa ("hice X y pasó lo opuesto"), una pregunta incómoda que ya saben la respuesta pero no quieren admitir, o un dato que contradice lo que creen.
+
+═══ ASÍ DEBE SONAR — y qué promesa hace cada uno ═══
+✅ "Hay una razón por la que Hermès no tiene cuenta en TikTok — y cuando la entiendes, cambia todo."
+   → promete: una revelación que te cambia cómo piensas sobre algo familiar
+
+✅ "Yo cerré mi cuenta con 50K seguidores en enero. En febrero vendí más que nunca."
+   → promete: explicar una paradoja real que contradice la lógica esperada
+
+✅ "¿Notaste que los relojes de lujo nunca muestran el precio en Instagram? Eso no es un accidente."
+   → promete: revelar la lógica oculta detrás de algo que ya observaste sin entender
+
+✅ "Llevaba 2 años creando contenido. Mis métricas eran perfectas. El problema: cero ventas."
+   → promete: revelar el error invisible que estás cometiendo ahora mismo
+
+✅ "Mira tu feed ahora mismo. Todo se parece, ¿verdad? El tuyo también."
+   → promete: hacerte ver algo incómodo sobre ti que no querías admitir
+
+✅ "El cliente que más me pagó me dijo que nunca había visto mi contenido. Eso me dejó mudo."
+   → promete: explicar una verdad contraintuitiva que cambia cómo ves tu trabajo
+
+═══ ANTI-PATRONES — PROHIBIDO ═══
+❌ Aforismos de coach/consultor ("El lujo no grita, se reconoce") — no prometen nada
+❌ Sustantivos abstractos como sujeto (viralidad, autenticidad, esencia, propósito)
+❌ Estructura "X. No Y, Z." más de una vez
 ❌ Empezar más de 2 ganchos con la misma palabra
 
-═══ REQUISITO DE CONCRETITUD ═══
-Cada gancho DEBE incluir al menos UNO de estos anclajes concretos:
-• Un número real específico (no "millones" — sí "4.200" o "3 años" o "8 meses")
-• Un nombre propio real (marca conocida, persona pública, plataforma, ciudad)
-• Una acción física del narrador ("abrí", "vi", "borré", "dije", "revisé", "cerré")
-• Una reacción emocional específica del narrador ("me rompió los esquemas", "no lo podía creer", "casi cierro todo")
-• Una escena que se pueda visualizar en 2 segundos ("mirando mi teléfono a las 2am", "en la primera reunión con ese cliente")
+═══ CONCRETITUD — cada gancho necesita al menos UNO ═══
+• Número específico ("4.200" / "3 años" / "8 meses" — no "millones")
+• Nombre propio real (marca, persona pública, plataforma, ciudad)
+• Acción física del narrador ("abrí", "borré", "dije", "revisé")
+• Escena visualizable en 2 segundos ("mirando el teléfono a las 2am")
 
-═══ VARIEDAD OBLIGATORIA DE ESTRUCTURAS ═══
-Distribuye estas estructuras entre los ${cantidad} ganchos (no repitas la misma más de 2 veces):
-→ "Yo [acción pasada inesperada]..." — narrador en primera persona
-→ "[Pregunta directa al espectador que lo incomoda]"
+═══ VARIEDAD DE ESTRUCTURAS — no repetir la misma más de 2 veces ═══
+→ "Yo [acción pasada inesperada]..."
+→ "[Pregunta directa que incomoda al espectador]"
 → "[Afirmación que choca] — [contexto que la explica]"
-→ "[Nombre de marca o persona real] [hace/dijo algo inesperado]. [Consecuencia que nadie menciona]."
-→ "[Escena concreta en medio de la acción, in-medias-res]"
-→ "Mira / Fíjate / Espera — [revelación inmediata]"
-→ "[Dato concreto que contradice lo que el espectador cree]"
-
-═══ VIBRA CORRECTA — así deben sonar ═══
-✅ "Hay una razón por la que Hermès no tiene cuenta en TikTok — y cuando la entiendes, cambia todo."
-✅ "Yo cerré mi cuenta con 50K seguidores en enero. En febrero vendí más que nunca."
-✅ "¿Notaste que los relojes de lujo nunca muestran el precio en Instagram? Eso no es un accidente."
-✅ "Llevaba 2 años creando contenido. Mis métricas eran perfectas. El problema: cero ventas."
-✅ "Mira tu feed ahora mismo. Todo se parece, ¿verdad? El tuyo también."
-✅ "El cliente que más me pagó me dijo que nunca había visto mi contenido. Eso me dejó mudo."
+→ "[Escena concreta in-medias-res]"
+→ "[Dato que contradice lo que el espectador cree]"
 
 FORMATO ESTRICTO — SOLO devuelve JSON válido, sin texto extra:
 {
   "hooks": [
-    { "text": "gancho 1", "reason": "en 1 frase natural: qué abre en la cabeza del espectador" },
+    { "text": "gancho 1", "reason": "en 1 frase: qué promesa abre en la cabeza del espectador" },
     { "text": "gancho 2", "reason": "..." }
   ]
 }`;
