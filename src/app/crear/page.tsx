@@ -8,6 +8,8 @@ import StepTema from './StepTema';
 import StepGanchos from './StepGanchos';
 import StepGuiones from './StepGuiones';
 import StepRevision from './StepRevision';
+import { loadProfile } from '@/lib/user-profile';
+import type { Niche, Platform, Tone } from '@/lib/viral-frameworks';
 
 const STORAGE_KEY = 'wizard_state_v1';
 
@@ -39,15 +41,31 @@ const DEFAULT_STATE: WizardState = {
   editInstruction: '',
 };
 
+function applyProfileDefaults(base: WizardState): WizardState {
+  const profile = loadProfile();
+  if (!profile) return base;
+  return {
+    ...base,
+    niche: (profile.nicho_default as Niche) || base.niche,
+    platform: (profile.platform_default as Platform) || base.platform,
+    tone: (profile.tone_default as Tone) || base.tone,
+    audiencia: profile.audiencia_objetivo || base.audiencia,
+  };
+}
+
 export default function CrearPage() {
   const [state, setState] = useState<WizardState>(DEFAULT_STATE);
   const [hydrated, setHydrated] = useState(false);
 
-  // Hydrate from localStorage on first render
+  // Hydrate from localStorage on first render; fall back to profile defaults
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setState(JSON.parse(saved));
+      if (saved) {
+        setState(JSON.parse(saved));
+      } else {
+        setState(applyProfileDefaults(DEFAULT_STATE));
+      }
     } catch {}
     setHydrated(true);
   }, []);
@@ -73,7 +91,7 @@ export default function CrearPage() {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {}
-    setState(DEFAULT_STATE);
+    setState(applyProfileDefaults(DEFAULT_STATE));
   };
 
   // Avoid hydration mismatch

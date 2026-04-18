@@ -47,6 +47,7 @@ export default function StepGanchos({ state, update, onNext, onBack }: Props) {
           useMyStyle: state.useMyStyle,
           contentObjective: state.contentObjective,
           universalPillar: state.universalPillar,
+          audiencia: state.audiencia,
         }),
       });
       // Robust response parsing: the API may return a non-JSON HTML error page

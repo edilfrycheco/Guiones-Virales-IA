@@ -19,6 +19,7 @@ interface Body {
   useMyStyle?: boolean;
   contentObjective?: ContentObjective;
   universalPillar?: UniversalPillar;
+  audiencia?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -68,6 +69,7 @@ TIPO DE GANCHO: ${body.hookType}
 PLATAFORMA: ${body.platform}
 TONO: ${body.tone}
 NICHO: ${body.niche}
+${body.audiencia ? `AUDIENCIA OBJETIVO: ${body.audiencia}` : ''}
 ${body.contentObjective ? `OBJETIVO DEL VIDEO: ${objectiveMap[body.contentObjective]}` : ''}
 ${body.universalPillar ? `PILAR UNIVERSAL: ${pillarMap[body.universalPillar]}` : ''}
 

@@ -12,6 +12,7 @@ import {
   Flame,
   Layers,
   BookOpen,
+  UserCircle,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { href: '/analyzer', label: 'Analizador', icon: BarChart3, description: 'Evaluar guiones' },
   { href: '/referentes', label: 'Referentes', icon: BookOpen, description: 'Guiones ganadores' },
   { href: '/templates', label: 'Plantillas', icon: BookTemplate, description: 'Frameworks' },
+  { href: '/perfil', label: 'Mi Perfil', icon: UserCircle, description: 'Audiencia & defaults' },
 ];
 
 export default function Sidebar() {
