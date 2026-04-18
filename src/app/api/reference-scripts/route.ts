@@ -62,7 +62,7 @@ export async function GET() {
     return NextResponse.json({ scripts: data || [] });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Error interno' },
+      { error: error instanceof Error ? error.message : (error as any)?.message || 'Error interno' },
       { status: 500 }
     );
   }
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ script: data });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Error interno' },
+      { error: error instanceof Error ? error.message : (error as any)?.message || 'Error al guardar' },
       { status: 500 }
     );
   }

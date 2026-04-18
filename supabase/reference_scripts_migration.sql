@@ -19,12 +19,24 @@ CREATE TABLE IF NOT EXISTS reference_scripts (
 -- Enable Row Level Security
 ALTER TABLE reference_scripts ENABLE ROW LEVEL SECURITY;
 
--- Policy: each user manages only their own scripts
-CREATE POLICY "Users manage own reference scripts"
-  ON reference_scripts
-  FOR ALL
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+-- Select: authenticated users see their own rows
+CREATE POLICY "reference_scripts_select"
+  ON reference_scripts FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Insert: authenticated users set their own user_id; unauthenticated insert with null
+CREATE POLICY "reference_scripts_insert"
+  ON reference_scripts FOR INSERT
+  WITH CHECK (user_id IS NULL OR auth.uid() = user_id);
+
+-- Update/Delete: only the owner
+CREATE POLICY "reference_scripts_update"
+  ON reference_scripts FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "reference_scripts_delete"
+  ON reference_scripts FOR DELETE
+  USING (auth.uid() = user_id);
 
 -- Index for fast user lookups
 CREATE INDEX IF NOT EXISTS idx_reference_scripts_user_id

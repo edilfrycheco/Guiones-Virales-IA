@@ -76,6 +76,8 @@ Cada gancho debe crear una PROMESA IMPLÍCITA. El espectador tiene que pensar: "
 
 La promesa puede ser: una revelación que cambia algo ("hay una razón que nadie menciona"), una paradoja curiosa ("hice X y pasó lo opuesto"), una pregunta incómoda que ya saben la respuesta pero no quieren admitir, o un dato que contradice lo que creen.
 
+⏱ LONGITUD ESTRICTA: máximo 2 oraciones, máximo 30 palabras en total. Un gancho se dice en 3 segundos mirando a cámara. Si necesitas 4 oraciones para explicarlo, no es un gancho — es un párrafo.
+
 ═══ ASÍ DEBE SONAR — y qué promesa hace cada uno ═══
 ✅ "Hay una razón por la que Hermès no tiene cuenta en TikTok — y cuando la entiendes, cambia todo."
    → promete: una revelación que te cambia cómo piensas sobre algo familiar
