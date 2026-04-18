@@ -58,7 +58,7 @@ function AddScriptForm({ onAdded }: { onAdded: (s: ReferenceScript) => void }) {
         );
       }
       if (data.error) throw new Error(data.error as string);
-      onAdded(data.script);
+      onAdded(data.script as ReferenceScript);
       setForm({ creator_name: '', topic: '', platform: 'instagram', niche: '', estimated_views: '', script_content: '' });
       setOpen(false);
     } catch (err) {
