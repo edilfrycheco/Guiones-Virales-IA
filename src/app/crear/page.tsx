@@ -57,16 +57,18 @@ export default function CrearPage() {
   const [state, setState] = useState<WizardState>(DEFAULT_STATE);
   const [hydrated, setHydrated] = useState(false);
 
-  // Hydrate from localStorage on first render; fall back to profile defaults
+  // Hydrate from localStorage on first render.
+  // Profile is the authoritative source for niche/platform/tone/audiencia —
+  // always merge profile defaults over saved wizard state so updating the
+  // profile in /perfil takes effect immediately, even if there's an old
+  // wizard_state_v1 with stale values.
   useEffect(() => {
+    let next: WizardState = DEFAULT_STATE;
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        setState(JSON.parse(saved));
-      } else {
-        setState(applyProfileDefaults(DEFAULT_STATE));
-      }
+      if (saved) next = { ...DEFAULT_STATE, ...JSON.parse(saved) };
     } catch {}
+    setState(applyProfileDefaults(next));
     setHydrated(true);
   }, []);
 
