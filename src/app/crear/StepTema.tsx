@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import type { WizardState } from './types';
 import type { HookType, ContentObjective, UniversalPillar } from '@/lib/viral-frameworks';
 import { HOOK_TEMPLATES } from '@/lib/viral-frameworks';
-import { suggestContentObjective, suggestHookType, suggestNiche, suggestTone, suggestUniversalPillar } from '@/lib/hook-framework-mapper';
+import { suggestContentObjective, suggestHookType, suggestTone, suggestUniversalPillar } from '@/lib/hook-framework-mapper';
 import {
   HOOK_TYPE_LABELS,
   HOOK_TYPE_DESCRIPTIONS,
@@ -32,14 +32,12 @@ export default function StepTema({ state, update, onNext }: Props) {
       return;
     }
     const hookType = forceHookType ?? (state.hookTypeIsAuto ? suggestHookType(tema) : state.hookType);
-    const niche = suggestNiche(tema);
     const tone = suggestTone(tema, hookType);
-    const universalPillar = state.universalPillarIsAuto ? suggestUniversalPillar(niche) : state.universalPillar;
+    const universalPillar = state.universalPillarIsAuto ? suggestUniversalPillar(state.niche) : state.universalPillar;
     const contentObjective = state.contentObjectiveIsAuto ? suggestContentObjective(tema, hookType) : state.contentObjective;
     update({
       tema,
       ...(state.hookTypeIsAuto || forceHookType ? { hookType } : {}),
-      niche,
       tone,
       ...(state.universalPillarIsAuto ? { universalPillar } : {}),
       ...(state.contentObjectiveIsAuto ? { contentObjective } : {}),
