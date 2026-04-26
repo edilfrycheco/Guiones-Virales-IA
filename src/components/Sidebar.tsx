@@ -13,20 +13,24 @@ import {
   ChevronRight,
   Flame,
   Layers,
+  BookOpen,
+  UserCircle,
+  CalendarDays,
 } from 'lucide-react';
 
-// Main flow items (shown prominently)
 const MAIN_NAV = [
   { href: '/', label: 'Dashboard', icon: Flame, description: 'Vista general' },
   { href: '/crear', label: 'Crear Guión', icon: Layers, description: 'Flujo guiado IA', primary: true },
+  { href: '/plan', label: 'Plan de Contenido', icon: CalendarDays, description: 'Banco de temas' },
   { href: '/analyzer', label: 'Analizador', icon: BarChart3, description: 'Evaluar guiones' },
-  { href: '/templates', label: 'Plantillas', icon: BookTemplate, description: 'Frameworks' },
+  { href: '/referentes', label: 'Referentes', icon: BookOpen, description: 'Guiones ganadores' },
+  { href: '/perfil', label: 'Mi Perfil', icon: UserCircle, description: 'Audiencia & defaults' },
 ];
 
-// Standalone tools (secondary)
 const TOOLS_NAV = [
   { href: '/hooks', label: 'Ganchos', icon: Zap, description: 'Generar hooks' },
   { href: '/generator', label: 'Generador', icon: Wand2, description: 'Crear guiones' },
+  { href: '/templates', label: 'Plantillas', icon: BookTemplate, description: 'Frameworks' },
 ];
 
 export default function Sidebar() {
@@ -54,7 +58,6 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 py-4 px-2 overflow-y-auto">
-        {/* Main nav items */}
         <div className="space-y-1 mb-2">
           {MAIN_NAV.map((item) => {
             const isActive = pathname === item.href;
@@ -95,7 +98,6 @@ export default function Sidebar() {
           })}
         </div>
 
-        {/* Separator + Herramientas Rápidas */}
         <div className={`mt-4 mb-2 ${collapsed ? 'border-t border-[var(--border-color)] pt-3' : ''}`}>
           {!collapsed && (
             <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-1">

@@ -4,51 +4,71 @@ import { useCallback, useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import WizardProgress from '@/components/WizardProgress';
 import type { WizardState, WizardStep } from './types';
-import StepTema from './StepTema';
+import StepOpiniones from './StepOpiniones';
 import StepGanchos from './StepGanchos';
-import StepGuiones from './StepGuiones';
-import StepRevision from './StepRevision';
+import StepGuion from './StepGuion';
+import { getCurrentWeekObjective, loadProfile } from '@/lib/user-profile';
+import type { Niche, Platform, Tone } from '@/lib/viral-frameworks';
 
 const STORAGE_KEY = 'wizard_state_v1';
 
 const DEFAULT_STATE: WizardState = {
   step: 1,
   tema: '',
-  hookType: 'curiosidad',
-  hookTypeIsAuto: true,
+  opinionIA: '',
+  opinionUsuario: '',
+  weekObjective: null,
   platform: 'instagram',
   tone: 'casual',
   niche: 'otro',
   length: 'medio',
-  cantidad: 5,
   humanizer: { nivel: 'moderado', regionalismos: 'neutro', personalidad: 'directo' },
-  useMyStyle: false,
   generatedHooks: [],
   selectedHookIndex: null,
-  frameworks: [],
-  incluirCta: true,
-  contexto: '',
-  audiencia: '',
-  generatedScripts: [],
-  selectedScriptIndex: null,
+  generatedScript: '',
   editedScript: '',
   editInstruction: '',
 };
+
+function applyProfileDefaults(base: WizardState): WizardState {
+  const profile = loadProfile();
+  if (!profile) return base;
+  return {
+    ...base,
+    niche: (profile.nicho_default as Niche) || base.niche,
+    platform: (profile.platform_default as Platform) || base.platform,
+    tone: (profile.tone_default as Tone) || base.tone,
+    weekObjective: getCurrentWeekObjective(profile),
+  };
+}
 
 export default function CrearPage() {
   const [state, setState] = useState<WizardState>(DEFAULT_STATE);
   const [hydrated, setHydrated] = useState(false);
 
-  // Hydrate from localStorage on first render
+  // Profile is the authoritative source for niche/platform/tone/weekObjective —
+  // always merge over saved state so updating the profile takes effect immediately.
+  // wizard_tema_seed: set by /plan page when user clicks a topic.
   useEffect(() => {
+    let next: WizardState = DEFAULT_STATE;
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setState(JSON.parse(saved));
+      if (saved) next = { ...DEFAULT_STATE, ...JSON.parse(saved) };
     } catch {}
+
+    // Check for a topic seed from the plan page
+    try {
+      const seed = localStorage.getItem('wizard_tema_seed');
+      if (seed) {
+        localStorage.removeItem('wizard_tema_seed');
+        next = { ...DEFAULT_STATE, tema: seed };
+      }
+    } catch {}
+
+    setState(applyProfileDefaults(next));
     setHydrated(true);
   }, []);
 
-  // Persist to localStorage on every state change
   useEffect(() => {
     if (!hydrated) return;
     try {
@@ -61,25 +81,19 @@ export default function CrearPage() {
   }, []);
 
   const goTo = (step: WizardStep) => update({ step });
-  const next = () =>
-    update({ step: Math.min(4, state.step + 1) as WizardStep });
-  const back = () =>
-    update({ step: Math.max(1, state.step - 1) as WizardStep });
+  const next = () => update({ step: Math.min(3, state.step + 1) as WizardStep });
+  const back = () => update({ step: Math.max(1, state.step - 1) as WizardStep });
   const reset = () => {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {}
-    setState(DEFAULT_STATE);
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    setState(applyProfileDefaults(DEFAULT_STATE));
   };
 
-  // Avoid hydration mismatch
   if (!hydrated) return null;
 
   return (
     <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 ml-[240px]">
-        {/* Header */}
         <div className="px-8 py-6 border-b border-[var(--border-color)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -87,9 +101,9 @@ export default function CrearPage() {
                 <span className="text-white text-lg">🚀</span>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">Crear Guión Viral</h1>
+                <h1 className="text-xl font-bold text-white">Crear Guión</h1>
                 <p className="text-sm text-[var(--text-muted)]">
-                  Flujo guiado paso a paso · Gancho → Guión → Revisión
+                  Tema → Opiniones → Ganchos → Guión
                 </p>
               </div>
             </div>
@@ -103,22 +117,17 @@ export default function CrearPage() {
         </div>
 
         <div className="max-w-5xl mx-auto px-8 py-8">
-          {/* Progress bar */}
           <WizardProgress step={state.step} onGoTo={goTo} />
 
-          {/* Step content */}
           <div className="mt-10">
             {state.step === 1 && (
-              <StepTema state={state} update={update} onNext={next} />
+              <StepOpiniones state={state} update={update} onNext={next} />
             )}
             {state.step === 2 && (
               <StepGanchos state={state} update={update} onNext={next} onBack={back} />
             )}
             {state.step === 3 && (
-              <StepGuiones state={state} update={update} onNext={next} onBack={back} />
-            )}
-            {state.step === 4 && (
-              <StepRevision state={state} update={update} onBack={back} onReset={reset} />
+              <StepGuion state={state} update={update} onBack={back} onReset={reset} />
             )}
           </div>
         </div>
