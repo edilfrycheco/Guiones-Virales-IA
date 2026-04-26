@@ -1,4 +1,4 @@
-import type { Framework, HookType, Niche, Platform, ScriptLength, Tone } from '@/lib/viral-frameworks';
+import type { Framework, HookType, Niche, Platform, ScriptLength, Tone, ContentObjective, UniversalPillar } from '@/lib/viral-frameworks';
 
 export const HOOK_TYPE_LABELS: Record<HookType, string> = {
   curiosidad: '🔍 Curiosidad',
@@ -100,4 +100,39 @@ export const HUMANIZER_PERSONALIDAD_LABELS: Record<string, string> = {
   reflexivo: '🤔 Reflexivo',
   sarcastico: '😏 Sarcástico',
   empatico: '❤️ Empático',
+};
+
+export const CONTENT_OBJECTIVE_LABELS: Record<ContentObjective, string> = {
+  alcance: 'S1 · Alcance',
+  educativo: 'S2 · Educativo',
+  conexion: 'S3 · Conexión',
+  autoridad: 'S4 · Autoridad',
+};
+
+export const CONTENT_OBJECTIVE_ICONS: Record<ContentObjective, string> = {
+  alcance: '📢',
+  educativo: '🎓',
+  conexion: '❤️',
+  autoridad: '🏆',
+};
+
+export const CONTENT_OBJECTIVE_DESCRIPTIONS: Record<ContentObjective, string> = {
+  alcance: 'Llegar a nuevas audiencias. Optimizado para shares de no-seguidores.',
+  educativo: 'Enseñar algo valioso. Optimizado para saves y watch time.',
+  conexion: 'Crear comunidad. Optimizado para comentarios y DMs.',
+  autoridad: 'Posicionar tu expertise. Optimizado para follows y confianza.',
+};
+
+export const UNIVERSAL_PILLAR_LABELS: Record<UniversalPillar, string> = {
+  dinero: '💰 Dinero',
+  relaciones: '❤️ Relaciones',
+  estatus: '👑 Estatus',
+  salud: '💪 Salud',
+};
+
+export const UNIVERSAL_PILLAR_DESCRIPTIONS: Record<UniversalPillar, string> = {
+  dinero: 'Generar, ahorrar o multiplicar dinero',
+  relaciones: 'Conectar, pertenecer, ser amado o entendido',
+  estatus: 'Ser respetado, reconocido o admirado',
+  salud: 'Sentirse bien, tener energía y vivir más',
 };

@@ -3,6 +3,8 @@
 
 export type Platform = 'instagram' | 'tiktok' | 'youtube_shorts';
 export type ScriptLength = 'corto' | 'medio' | 'largo';
+export type ContentObjective = 'alcance' | 'educativo' | 'conexion' | 'autoridad';
+export type UniversalPillar = 'dinero' | 'relaciones' | 'estatus' | 'salud';
 export type HookType =
   | 'curiosidad'
   | 'controversia'
@@ -44,6 +46,8 @@ export interface ScriptConfig {
   audiencia_objetivo?: string;
   incluir_cta: boolean;
   estilo_cta?: string;
+  contentObjective?: ContentObjective;
+  universalPillar?: UniversalPillar;
 }
 
 export interface HookConfig {
@@ -53,6 +57,8 @@ export interface HookConfig {
   tone: Tone;
   niche: Niche;
   cantidad: number;
+  contentObjective?: ContentObjective;
+  universalPillar?: UniversalPillar;
 }
 
 export interface AnalysisResult {

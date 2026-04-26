@@ -3,10 +3,9 @@
 import type { WizardStep } from '@/app/crear/types';
 
 const STEPS: { num: WizardStep; label: string; icon: string }[] = [
-  { num: 1, label: 'Tema', icon: '✏️' },
+  { num: 1, label: 'Tema y opinión', icon: '💭' },
   { num: 2, label: 'Ganchos', icon: '🎣' },
-  { num: 3, label: 'Guiones', icon: '📝' },
-  { num: 4, label: 'Revisión', icon: '✅' },
+  { num: 3, label: 'Guión', icon: '📝' },
 ];
 
 interface Props {
@@ -15,7 +14,7 @@ interface Props {
 }
 
 export default function WizardProgress({ step, onGoTo }: Props) {
-  const progressPct = ((step - 1) / 3) * 100;
+  const progressPct = ((step - 1) / 2) * 100;
 
   return (
     <div className="relative flex items-start justify-between px-5">

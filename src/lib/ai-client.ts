@@ -1,16 +1,29 @@
 // Cliente de IA para generación de guiones
 // Soporta Anthropic Claude como motor principal
 // Incluye reintentos automáticos con exponential backoff para errores 529/503/429
+// Permite override de modelo, max_tokens y extended thinking por llamada
 
 interface AIResponse {
   content: string;
   model: string;
+  thinking?: string;
+}
+
+export interface AIConfig {
+  /** Override del modelo. Por defecto: env AI_MODEL → claude-sonnet-4-6 */
+  model?: string;
+  /** Tokens máximos a generar. Por defecto 2048 */
+  maxTokens?: number;
+  /** Habilita extended thinking. Si se pasa, max_tokens debe ser > budgetTokens */
+  thinking?: { budgetTokens: number };
 }
 
 // Códigos HTTP que justifican reintento automático
 const RETRYABLE_STATUS_CODES = [429, 500, 502, 503, 504, 529];
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 2000; // 2s, 4s, 8s
+
+const DEFAULT_MAX_TOKENS = 2048;
 
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -20,13 +33,26 @@ async function callAnthropicAPI(
   apiKey: string,
   model: string,
   systemPrompt: string,
-  userPrompt: string
+  userPrompt: string,
+  maxTokens: number,
+  thinking?: { budgetTokens: number }
 ): Promise<Response> {
   const trimmedSystem = systemPrompt?.trim();
   const trimmedUser = userPrompt?.trim();
 
   if (!trimmedUser) {
     throw new Error('El prompt del usuario no puede estar vacío');
+  }
+
+  // Extended thinking exige max_tokens > budget_tokens y temperature=1 (default)
+  const body: Record<string, unknown> = {
+    model,
+    max_tokens: maxTokens,
+    ...(trimmedSystem ? { system: trimmedSystem } : {}),
+    messages: [{ role: 'user', content: trimmedUser }],
+  };
+  if (thinking) {
+    body.thinking = { type: 'enabled', budget_tokens: thinking.budgetTokens };
   }
 
   return fetch('https://api.anthropic.com/v1/messages', {
@@ -36,19 +62,15 @@ async function callAnthropicAPI(
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
     },
-    body: JSON.stringify({
-      model,
-      max_tokens: 2048,
-      ...(trimmedSystem ? { system: trimmedSystem } : {}),
-      messages: [{ role: 'user', content: trimmedUser }],
-    }),
+    body: JSON.stringify(body),
   });
 }
 
 export async function generateWithAI(
   systemPrompt: string,
   userPrompt: string,
-  styleContext?: string
+  styleContext?: string,
+  config?: AIConfig
 ): Promise<AIResponse> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   // Treat a whitespace-only styleContext the same as an absent one so we never
@@ -58,8 +80,17 @@ export async function generateWithAI(
     ? `${systemPrompt}\n\n${trimmedStyleContext}`
     : systemPrompt;
   // Modelo por defecto: claude-sonnet-4-6 (último modelo más capaz)
-  // Override via env var AI_MODEL si quieres otro modelo
-  const model = process.env.AI_MODEL || 'claude-sonnet-4-6';
+  // Override via config.model o env var AI_MODEL
+  const model = config?.model || process.env.AI_MODEL || 'claude-sonnet-4-6';
+  const maxTokens = config?.maxTokens ?? DEFAULT_MAX_TOKENS;
+  const thinking = config?.thinking;
+
+  // Validación: si hay thinking, max_tokens debe ser estrictamente mayor que budget
+  if (thinking && maxTokens <= thinking.budgetTokens) {
+    throw new Error(
+      `max_tokens (${maxTokens}) debe ser mayor que budget_tokens (${thinking.budgetTokens}) cuando se usa extended thinking`
+    );
+  }
 
   if (!apiKey) {
     // Modo demo: generar respuesta basada en plantillas
@@ -74,7 +105,14 @@ export async function generateWithAI(
   // Intento inicial + reintentos automáticos
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const response = await callAnthropicAPI(apiKey, model, finalSystem, userPrompt);
+      const response = await callAnthropicAPI(
+        apiKey,
+        model,
+        finalSystem,
+        userPrompt,
+        maxTokens,
+        thinking
+      );
 
       // Éxito
       if (response.ok) {
@@ -82,14 +120,16 @@ export async function generateWithAI(
         // Find the first text block — the API can return multiple block types
         // (e.g. thinking blocks before text blocks in extended-thinking mode).
         // Accessing content[0].text blindly would return undefined for non-text blocks.
-        const textBlock = (data.content as Array<{ type: string; text?: string }>)
-          ?.find((b) => b.type === 'text');
+        const blocks = data.content as Array<{ type: string; text?: string; thinking?: string }>;
+        const textBlock = blocks?.find((b) => b.type === 'text');
+        const thinkingBlock = blocks?.find((b) => b.type === 'thinking');
         if (!textBlock?.text) {
           throw new Error('La IA no devolvió contenido de texto. Inténtalo de nuevo.');
         }
         return {
           content: textBlock.text,
           model,
+          ...(thinkingBlock?.thinking ? { thinking: thinkingBlock.thinking } : {}),
         };
       }
 

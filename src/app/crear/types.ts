@@ -1,44 +1,36 @@
-import type { Framework, HookType, Niche, Platform, ScriptLength, Tone } from '@/lib/viral-frameworks';
+import type { Niche, Platform, ScriptLength, Tone } from '@/lib/viral-frameworks';
 import type { HumanizerConfig } from '@/lib/humanizer';
+import type { WeekObjective } from '@/lib/user-profile';
 
 export interface GeneratedHook {
   text: string;
   reason: string;
 }
 
-export interface GeneratedScript {
-  framework: Framework;
-  content: string;
-}
-
-export type WizardStep = 1 | 2 | 3 | 4;
+export type WizardStep = 1 | 2 | 3;
 
 export interface WizardState {
   step: WizardStep;
-  // Step 1
+
+  // Paso 1 — Tema y opiniones
   tema: string;
-  hookType: HookType;
-  hookTypeIsAuto: boolean;
-  // Step 2 config
+  opinionIA: string;          // lo que la IA opina sobre el tema (genera la app)
+  opinionUsuario: string;     // lo que el usuario realmente piensa
+  weekObjective: WeekObjective | null; // contexto de la semana actual (alcance/educativo/conexion/autoridad)
+
+  // Defaults técnicos (vienen del perfil, no se eligen en el wizard)
   platform: Platform;
   tone: Tone;
   niche: Niche;
   length: ScriptLength;
-  cantidad: number;
   humanizer: HumanizerConfig;
-  useMyStyle: boolean;
-  // Step 2 results
+
+  // Paso 2 — Ganchos
   generatedHooks: GeneratedHook[];
   selectedHookIndex: number | null;
-  // Step 3 config
-  frameworks: Framework[];
-  incluirCta: boolean;
-  contexto: string;
-  audiencia: string;
-  // Step 3 results
-  generatedScripts: GeneratedScript[];
-  selectedScriptIndex: number | null;
-  // Step 4
+
+  // Paso 3 — Guión
+  generatedScript: string;
   editedScript: string;
   editInstruction: string;
 }

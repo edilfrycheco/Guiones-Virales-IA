@@ -1,16 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { ArrowLeft, ArrowRight, Loader2, RefreshCw, Sparkles, Check, Pencil, X } from 'lucide-react';
 import type { WizardState, GeneratedHook } from './types';
-import {
-  PLATFORM_LABELS,
-  TONE_LABELS,
-  NICHE_LABELS,
-  HOOK_TYPE_LABELS,
-  HUMANIZER_REGION_LABELS,
-  HUMANIZER_NIVEL_LABELS,
-  HUMANIZER_PERSONALIDAD_LABELS,
-} from './constants';
+import { loadProfile } from '@/lib/user-profile';
 
 interface Props {
   state: WizardState;
@@ -22,30 +15,49 @@ interface Props {
 export default function StepGanchos({ state, update, onNext, onBack }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [savedIndices, setSavedIndices] = useState<Set<number>>(new Set());
-  const [savingIdx, setSavingIdx] = useState<number | null>(null);
+  const [editingIdx, setEditingIdx] = useState<number | null>(null);
+  const [editText, setEditText] = useState('');
 
   const generateHooks = async () => {
     setLoading(true);
     setError('');
+    setEditingIdx(null);
     update({ generatedHooks: [], selectedHookIndex: null });
+
+    const profile = loadProfile();
+
     try {
       const res = await fetch('/api/wizard/generate-hooks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tema: state.tema,
-          hookType: state.hookType,
+          opinionUsuario: state.opinionUsuario,
+          opinionIA: state.opinionIA,
           platform: state.platform,
           tone: state.tone,
           niche: state.niche,
-          cantidad: state.cantidad,
+          cantidad: 5,
           humanizer: state.humanizer,
-          useMyStyle: state.useMyStyle,
+          audiencia: profile?.audiencia_objetivo,
+          perspectiva_editorial: profile?.perspectiva_editorial,
+          manera_ensenar: profile?.manera_ensenar,
+          weekObjective: state.weekObjective,
         }),
       });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
+
+      const raw = await res.text();
+      let data: { hooks?: GeneratedHook[]; error?: string } = {};
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        throw new Error(
+          res.status === 504 || !res.ok
+            ? `El servidor tardó demasiado (${res.status}). Intenta de nuevo.`
+            : 'Respuesta inválida del servidor. Reintenta.'
+        );
+      }
+      if (!res.ok || data.error) throw new Error(data.error || `Error ${res.status}`);
       update({ generatedHooks: data.hooks || [] });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al generar ganchos');
@@ -54,273 +66,171 @@ export default function StepGanchos({ state, update, onNext, onBack }: Props) {
     }
   };
 
-  const saveHookFavorite = async (hook: GeneratedHook, idx: number) => {
-    if (savedIndices.has(idx)) return;
-    setSavingIdx(idx);
-    try {
-      const res = await fetch('/api/hooks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tema: state.tema,
-          hook_type: state.hookType,
-          hook_text: hook.text,
-          platform: state.platform,
-          tone: state.tone,
-          niche: state.niche,
-          is_favorite: true,
-        }),
-      });
-      if (res.ok) setSavedIndices((prev) => new Set([...prev, idx]));
-    } catch {
-      // Silent fail when not logged in
-    } finally {
-      setSavingIdx(null);
+  // Auto-genera al entrar si aún no hay ganchos
+  useEffect(() => {
+    if (state.generatedHooks.length === 0 && !loading) {
+      generateHooks();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const saveEdit = (idx: number) => {
+    const updated = [...state.generatedHooks];
+    updated[idx] = { ...updated[idx], text: editText.trim() || updated[idx].text };
+    update({ generatedHooks: updated });
+    setEditingIdx(null);
   };
 
-  const selectedHook =
-    state.selectedHookIndex !== null ? state.generatedHooks[state.selectedHookIndex] : null;
+  const startEdit = (idx: number) => {
+    setEditingIdx(idx);
+    setEditText(state.generatedHooks[idx].text);
+  };
+
+  const canContinue = state.selectedHookIndex !== null;
 
   return (
-    <div className="space-y-5">
-      {/* Config card */}
-      <div className="bg-[#1A1B1E] border border-[#2C2E33] rounded-2xl p-6">
-        <h2 className="text-lg font-semibold mb-1">Configura tus ganchos</h2>
-        <p className="text-[#909296] text-sm mb-5">
-          Tema:{' '}
-          <span className="text-white italic">"{state.tema}"</span>
-          {' · '}
-          Gancho:{' '}
-          <span className="text-[#5c7cfa]">{HOOK_TYPE_LABELS[state.hookType]}</span>
-        </p>
-
-        {/* Row 1: Platform, Tone, Niche */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          {(
-            [
-              { label: 'Plataforma', key: 'platform', options: PLATFORM_LABELS },
-              { label: 'Tono', key: 'tone', options: TONE_LABELS },
-              { label: 'Nicho', key: 'niche', options: NICHE_LABELS },
-            ] as const
-          ).map(({ label, key, options }) => (
-            <div key={key}>
-              <label className="block text-xs text-[#909296] mb-1.5">{label}</label>
-              <select
-                value={state[key] as string}
-                onChange={(e) => update({ [key]: e.target.value } as Partial<WizardState>)}
-                className="w-full bg-[#25262B] border border-[#2C2E33] rounded-lg px-3 py-2 text-sm text-white focus:border-[#5c7cfa] focus:outline-none"
-              >
-                {Object.entries(options).map(([val, lbl]) => (
-                  <option key={val} value={val}>
-                    {lbl as string}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ))}
-        </div>
-
-        {/* Row 2: Humanizer */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          {/* Nivel */}
-          <div>
-            <label className="block text-xs text-[#909296] mb-1.5">Humanización</label>
-            <div className="flex gap-1">
-              {(['sutil', 'moderado', 'agresivo'] as const).map((n) => (
-                <button
-                  key={n}
-                  onClick={() => update({ humanizer: { ...state.humanizer, nivel: n } })}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    state.humanizer.nivel === n
-                      ? 'bg-[#5c7cfa] text-white'
-                      : 'bg-[#25262B] border border-[#2C2E33] text-[#909296] hover:text-white'
-                  }`}
-                >
-                  {HUMANIZER_NIVEL_LABELS[n]}
-                </button>
-              ))}
-            </div>
-          </div>
-          {/* Región */}
-          <div>
-            <label className="block text-xs text-[#909296] mb-1.5">Región</label>
-            <select
-              value={state.humanizer.regionalismos}
-              onChange={(e) =>
-                update({ humanizer: { ...state.humanizer, regionalismos: e.target.value as any } })
-              }
-              className="w-full bg-[#25262B] border border-[#2C2E33] rounded-lg px-3 py-2 text-sm text-white focus:border-[#5c7cfa] focus:outline-none"
-            >
-              {Object.entries(HUMANIZER_REGION_LABELS).map(([val, lbl]) => (
-                <option key={val} value={val}>
-                  {lbl}
-                </option>
-              ))}
-            </select>
-          </div>
-          {/* Personalidad */}
-          <div>
-            <label className="block text-xs text-[#909296] mb-1.5">Personalidad</label>
-            <select
-              value={state.humanizer.personalidad}
-              onChange={(e) =>
-                update({ humanizer: { ...state.humanizer, personalidad: e.target.value as any } })
-              }
-              className="w-full bg-[#25262B] border border-[#2C2E33] rounded-lg px-3 py-2 text-sm text-white focus:border-[#5c7cfa] focus:outline-none"
-            >
-              {Object.entries(HUMANIZER_PERSONALIDAD_LABELS).map(([val, lbl]) => (
-                <option key={val} value={val}>
-                  {lbl}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Row 3: Cantidad + useMyStyle */}
-        <div className="flex items-center gap-6 mb-5">
+    <div className="max-w-3xl mx-auto space-y-6">
+      <div className="bg-[#1A1B1E] border border-[#2C2E33] rounded-2xl p-7">
+        <div className="flex items-start justify-between mb-4 gap-4">
           <div className="flex-1">
-            <label className="block text-xs text-[#909296] mb-2">
-              Cantidad de ganchos:{' '}
-              <span className="text-white font-semibold">{state.cantidad}</span>
-            </label>
-            <input
-              type="range"
-              min={3}
-              max={10}
-              value={state.cantidad}
-              onChange={(e) => update({ cantidad: Number(e.target.value) })}
-              className="w-full accent-[#5c7cfa]"
-            />
-            <div className="flex justify-between text-xs text-[#5C5F66] mt-1">
-              <span>3</span>
-              <span>10</span>
-            </div>
+            <h2 className="text-lg font-semibold text-white mb-1">Elige el gancho</h2>
+            <p className="text-[#909296] text-sm">
+              5 mensajes directos, escritos desde tu opinión real. Selecciona el que mejor diría lo que piensas.
+            </p>
           </div>
-          <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
-            <div
-              onClick={() => update({ useMyStyle: !state.useMyStyle })}
-              className={`w-10 h-5 rounded-full transition-colors relative cursor-pointer ${
-                state.useMyStyle ? 'bg-[#5c7cfa]' : 'bg-[#2C2E33]'
-              }`}
-            >
-              <div
-                className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform shadow ${
-                  state.useMyStyle ? 'translate-x-5' : 'translate-x-0.5'
-                }`}
-              />
-            </div>
-            <span className="text-sm text-[#C1C2C5]">Usar mi estilo</span>
-          </label>
+          <button
+            onClick={generateHooks}
+            disabled={loading}
+            className="text-xs text-[#909296] hover:text-[#5c7cfa] flex items-center gap-1.5 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            Regenerar
+          </button>
         </div>
 
-        <button
-          onClick={generateHooks}
-          disabled={loading}
-          className="w-full bg-[#5c7cfa] hover:bg-[#4c6ef5] disabled:bg-[#2C2E33] disabled:text-[#5C5F66] text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
-        >
-          {loading ? (
-            <>
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Generando {state.cantidad} ganchos...
-            </>
-          ) : (
-            <>🎣 Generar {state.cantidad} Ganchos</>
-          )}
-        </button>
-
-        {error && (
-          <p className="mt-3 text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-4 py-2">
-            {error}
-          </p>
-        )}
-      </div>
-
-      {/* Generated hooks */}
-      {state.generatedHooks.length > 0 && (
-        <div className="bg-[#1A1B1E] border border-[#2C2E33] rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold">Selecciona tu gancho favorito</h3>
-            {selectedHook && (
-              <span className="text-sm text-[#5c7cfa]">✓ Gancho seleccionado</span>
-            )}
+        {/* Resumen de la opinión */}
+        <details className="mb-5 group">
+          <summary className="cursor-pointer list-none text-xs text-[#5C5F66] hover:text-[#909296] flex items-center gap-1">
+            <span className="group-open:rotate-90 transition-transform inline-block">▸</span>
+            Ver tu opinión sobre el tema
+          </summary>
+          <div className="mt-2 p-3 bg-[#25262B] rounded-lg text-xs text-[#909296] italic leading-relaxed">
+            {state.opinionUsuario}
           </div>
+        </details>
+
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 size={32} className="animate-spin text-[#5c7cfa] mb-3" />
+            <p className="text-[#909296] text-sm">Escribiendo ganchos desde tu opinión...</p>
+          </div>
+        )}
+
+        {error && !loading && (
+          <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-lg text-sm text-rose-300">
+            {error}
+            <button
+              onClick={generateHooks}
+              className="ml-3 underline hover:no-underline"
+            >
+              Reintentar
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && state.generatedHooks.length > 0 && (
           <div className="space-y-3">
             {state.generatedHooks.map((hook, idx) => {
               const isSelected = state.selectedHookIndex === idx;
-              const isSaved = savedIndices.has(idx);
+              const isEditing = editingIdx === idx;
+
               return (
                 <div
                   key={idx}
-                  onClick={() => update({ selectedHookIndex: idx })}
-                  className={`relative rounded-xl border p-4 cursor-pointer transition-all ${
+                  className={`rounded-xl border transition-all ${
                     isSelected
-                      ? 'border-[#5c7cfa] bg-[#5c7cfa]/5'
+                      ? 'border-[#5c7cfa] bg-[#5c7cfa]/5 shadow-[0_0_0_1px_rgba(92,124,250,0.3)]'
                       : 'border-[#2C2E33] bg-[#25262B] hover:border-[#5c7cfa]/40'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      {/* Radio indicator */}
-                      <div
-                        className={`mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
-                          isSelected ? 'border-[#5c7cfa] bg-[#5c7cfa]' : 'border-[#5C5F66]'
-                        }`}
-                      >
-                        {isSelected && <div className="w-2 h-2 bg-white rounded-full" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-white text-sm leading-relaxed">
-                          {hook.text}
-                        </p>
-                        {hook.reason && (
-                          <p className="text-xs text-[#909296] mt-1.5">💡 {hook.reason}</p>
-                        )}
+                  {isEditing ? (
+                    <div className="p-4 space-y-3">
+                      <textarea
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        rows={2}
+                        className="w-full bg-[#1A1B1E] border border-[#2C2E33] rounded-lg px-3 py-2 text-white text-sm resize-none focus:border-[#5c7cfa] focus:outline-none"
+                        autoFocus
+                      />
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => saveEdit(idx)}
+                          className="text-xs bg-[#5c7cfa] hover:bg-[#4c6ef5] text-white px-3 py-1.5 rounded-md flex items-center gap-1"
+                        >
+                          <Check size={12} /> Guardar
+                        </button>
+                        <button
+                          onClick={() => setEditingIdx(null)}
+                          className="text-xs text-[#909296] hover:text-white px-3 py-1.5 rounded-md flex items-center gap-1"
+                        >
+                          <X size={12} /> Cancelar
+                        </button>
                       </div>
                     </div>
-                    {/* Star / save button */}
+                  ) : (
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        saveHookFavorite(hook, idx);
-                      }}
-                      disabled={savingIdx === idx || isSaved}
-                      title={isSaved ? 'Guardado en tu biblioteca' : 'Guardar en favoritos'}
-                      className={`flex-shrink-0 p-1.5 rounded-lg transition-all ${
-                        isSaved
-                          ? 'text-yellow-400'
-                          : 'text-[#5C5F66] hover:text-yellow-400 hover:bg-yellow-400/10'
-                      }`}
+                      onClick={() => update({ selectedHookIndex: idx })}
+                      className="w-full p-4 text-left"
                     >
-                      {savingIdx === idx ? (
-                        <span className="w-4 h-4 border border-current border-t-transparent rounded-full animate-spin block" />
-                      ) : (
-                        <span className="text-lg leading-none">{isSaved ? '⭐' : '☆'}</span>
-                      )}
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                            isSelected
+                              ? 'border-[#5c7cfa] bg-[#5c7cfa]'
+                              : 'border-[#5C5F66]'
+                          }`}
+                        >
+                          {isSelected && <Check size={12} className="text-white" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm leading-relaxed">{hook.text}</p>
+                          {hook.reason && (
+                            <p className="text-xs text-[#5C5F66] mt-2 italic">→ {hook.reason}</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); startEdit(idx); }}
+                          className="text-[#5C5F66] hover:text-[#5c7cfa] p-1 rounded"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      </div>
                     </button>
-                  </div>
+                  )}
                 </div>
               );
             })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Navigation */}
-      <div className="flex gap-3">
+      {/* Botones */}
+      <div className="flex items-center gap-3">
         <button
           onClick={onBack}
-          className="px-6 py-3 border border-[#2C2E33] hover:border-[#5c7cfa] text-[#909296] hover:text-white rounded-xl transition-colors"
+          className="flex items-center gap-2 text-[#909296] hover:text-white px-4 py-3 rounded-xl border border-[#2C2E33] hover:border-[#5c7cfa] transition-colors"
         >
-          ← Volver
+          <ArrowLeft size={16} />
+          Atrás
         </button>
         <button
           onClick={onNext}
-          disabled={state.selectedHookIndex === null}
-          className="flex-1 bg-[#5c7cfa] hover:bg-[#4c6ef5] disabled:bg-[#25262B] disabled:text-[#5C5F66] text-white font-semibold py-3 rounded-xl transition-colors"
+          disabled={!canContinue}
+          className="flex-1 flex items-center justify-center gap-2 bg-[#5c7cfa] hover:bg-[#4c6ef5] disabled:bg-[#25262B] disabled:text-[#5C5F66] text-white font-semibold py-3 rounded-xl transition-colors"
         >
-          Continuar → Generar Guiones
+          <Sparkles size={16} />
+          Crear el guión
+          <ArrowRight size={16} />
         </button>
       </div>
     </div>
